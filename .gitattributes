@@ -1,0 +1,5 @@
+# 모든 텍스트 파일을 UTF-8로 설정
+* text=auto
+
+# Java 파일은 LF(Line Feed)로 줄바꿈 처리
+*.java text eol=lf
