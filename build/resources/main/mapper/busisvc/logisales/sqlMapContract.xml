@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.seoulit.logistics.busisvc.logisales.mapper.ContractMapper">
+
+	<resultMap type="kr.co.seoulit.logistics.busisvc.logisales.to.EstimateTO" id="estimateList">
+		<result property="contractStatus" column="CONTRACT_STATUS"  />
+		<result property="customerCode" column="CUSTOMER_CODE"  />
+		<result property="description" column="DESCRIPTION"  />
+		<result property="effectiveDate" column="EFFECTIVE_DATE"  />
+		<result property="estimateDate" column="ESTIMATE_DATE" />
+		<result property="estimateNo" column="ESTIMATE_NO"  />
+		<result property="estimateRequester" column="ESTIMATE_REQUESTER"  />
+		<result property="personCodeInCharge" column="PERSON_CODE_IN_CHARGE"  />
+		<result property="customerName" column="CUSTOMER_NAME" />
+	</resultMap>
+
+	<select id="selectEstimateListInContractAvailable" parameterType="map" resultMap="estimateList">
+	<![CDATA[
+		SELECT *
+		FROM ESTIMATE a ,(SELECT CUSTOMER_CODE , CUSTOMER_NAME FROM CUSTOMER) b
+		WHERE CONTRACT_STATUS IS NULL
+		  AND b.CUSTOMER_CODE = a.CUSTOMER_CODE
+		  AND TO_DATE(EFFECTIVE_DATE,'RRRR-MM-DD') >= TO_DATE(SYSDATE,'RRRR-MM-DD')
+		  AND TO_DATE(ESTIMATE_DATE, 'RRRR-MM-DD')
+			BETWEEN TO_DATE(#{startDate}, 'RRRR-MM-DD') AND TO_DATE(#{endDate},'RRRR-MM-DD')
+		]]>
+	</select>
+
+	<resultMap type="kr.co.seoulit.logistics.busisvc.logisales.to.ContractInfoTO" id="contractInfoResult">
+		<result property="contractNo" column="CONTRACT_NO"  />
+		<result property="estimateNo" column="ESTIMATE_NO"  />
+		<result property="contractType" column="CONTRACT_TYPE"  />
+		<result property="contractTypeName" column="CONTRACT_TYPE_NAME"  />
+		<result property="customerCode" column="CUSTOMER_CODE"  />
+		<result property="customerName" column="CUSTOMER_NAME"  />
+		<result property="estimateDate" column="ESTIMATE_DATE"  />
+		<result property="contractDate" column="CONTRACT_DATE"  />
+		<result property="contractRequester" column="CONTRACT_REQUESTER"  />
+		<result property="personCodeInCharge" column="PERSON_CODE_IN_CHARGE"  />
+		<result property="empNameInCharge" column="EMP_NAME_IN_CHARGE"  />
+		<result property="description" column="DESCRIPTION" />
+		<result property="deliveryCompletionStatus" column="DELIVERY_COMPLETION_STATUS"  />
+	</resultMap>
+
+	<select id="selectContractList" parameterType="map" resultMap="contractInfoResult">
+		WITH CODE_DETAIL_LIST AS
+		( SELECT DETAIL_CODE, DETAIL_CODE_NAME FROM CODE_DETAIL ) ,
+		<if test='searchCondition=="searchByCustomer"'>
+			CONTRACT_LIST AS ( SELECT * FROM CONTRACT WHERE CUSTOMER_CODE = #{customerCode}) ,
+		</if>
+		<if test='searchCondition=="searchByDate"'>
+			CONTRACT_LIST AS ( SELECT * FROM CONTRACT WHERE CONTRACT_DATE BETWEEN
+			TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD') ),
+		</if>
+		ESTIMATE_LIST AS ( SELECT * FROM ESTIMATE )
+		SELECT T1.CONTRACT_NO
+		, T1.ESTIMATE_NO
+		, T1.CONTRACT_TYPE
+		, T2.DETAIL_CODE_NAME AS CONTRACT_TYPE_NAME
+		, T1.CUSTOMER_CODE
+		, T3.DETAIL_CODE_NAME AS CUSTOMER_NAME
+		, E.ESTIMATE_DATE
+		, T1.CONTRACT_DATE
+		, T1.CONTRACT_REQUESTER
+		, T1.PERSON_CODE_IN_CHARGE
+		, T4.DETAIL_CODE_NAME AS EMP_NAME_IN_CHARGE
+		, T1.DESCRIPTION
+		<if test='searchCondition=="searchByDate"'>
+			, T1.DELIVERY_COMPLETION_STATUS
+		</if>
+		FROM CONTRACT_LIST T1
+		, CODE_DETAIL_LIST T2
+		, CODE_DETAIL_LIST T3
+		, CODE_DETAIL_LIST T4
+		, ESTIMATE_LIST E
+		WHERE T1.CONTRACT_TYPE = T2.DETAIL_CODE
+		AND T1.CUSTOMER_CODE = T3.DETAIL_CODE
+		AND T1.PERSON_CODE_IN_CHARGE = T4.DETAIL_CODE
+		AND T1.ESTIMATE_NO = E.ESTIMATE_NO
+	</select>
+
+	<select id="selectDeliverableContractList" parameterType="map" resultMap="contractInfoResult">
+
+		WITH CODE_DETAIL_LIST AS
+		( SELECT DETAIL_CODE, DETAIL_CODE_NAME FROM CODE_DETAIL ) ,
+		<if test='searchCondition=="searchByCustomer"'>
+			CONTRACT_LIST AS
+			( SELECT * FROM CONTRACT WHERE CUSTOMER_CODE = #{customerCode} ) ,
+		</if>
+		<if test='searchCondition=="searchByDate"'>
+			CONTRACT_LIST AS ( SELECT * FROM CONTRACT WHERE CONTRACT_DATE BETWEEN
+			TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD') ),
+		</if>
+		ESTIMATE_LIST AS
+		( SELECT * FROM ESTIMATE )
+
+		SELECT
+		T1.CONTRACT_NO,
+		T1.ESTIMATE_NO,
+		T1.CONTRACT_TYPE,
+		T2.DETAIL_CODE_NAME AS CONTRACT_TYPE_NAME,
+		T1.CUSTOMER_CODE,
+		T3.DETAIL_CODE_NAME AS CUSTOMER_NAME,
+		E.ESTIMATE_DATE,
+		T1.CONTRACT_DATE,
+		T1.CONTRACT_REQUESTER,
+		T1.PERSON_CODE_IN_CHARGE,
+		T4.DETAIL_CODE_NAME AS EMP_NAME_IN_CHARGE,
+		T1.DESCRIPTION,
+		T1.DELIVERY_COMPLETION_STATUS
+		FROM
+		CONTRACT_LIST T1,
+		CODE_DETAIL_LIST T2,
+		CODE_DETAIL_LIST T3,
+		CODE_DETAIL_LIST T4,
+		ESTIMATE_LIST E
+		WHERE
+		T1.CONTRACT_TYPE = T2.DETAIL_CODE
+		AND T1.CUSTOMER_CODE = T3.DETAIL_CODE
+		AND T1.PERSON_CODE_IN_CHARGE = T4.DETAIL_CODE
+		AND T1.ESTIMATE_NO = E.ESTIMATE_NO
+		AND T1.DELIVERY_COMPLETION_STATUS IS NULL
+
+	</select>
+
+	<select id="selectContractCount" resultType="int">
+		SELECT CONTRACT_SEQ.NEXTVAL FROM DUAL
+	</select>
+
+	<insert id="insertContract" parameterType="kr.co.seoulit.logistics.busisvc.logisales.to.ContractTO">
+		INSERT INTO CONTRACT (CONTRACT_NO, ESTIMATE_NO,
+							  CONTRACT_TYPE, CUSTOMER_CODE, CONTRACT_DATE,
+							  CONTRACT_REQUESTER, PERSON_CODE_IN_CHARGE, DESCRIPTION)
+		VALUES (#{contractNo}, #{estimateNo},
+				#{contractType}, #{customerCode},
+				#{contractDate}, #{contractRequester},
+				#{personCodeInCharge}, #{description})
+	</insert>
+
+	<update id="updateContract" parameterType="kr.co.seoulit.logistics.busisvc.logisales.to.ContractTO">
+		UPDATE CONTRACT SET ESTIMATE_NO = #{estimateNo} ,
+							CONTRACT_TYPE = #{contractType} ,
+							CUSTOMER_CODE = #{customerCode} ,
+							CONTRACT_DATE = #{contractDate} ,
+							CONTRACT_REQUESTER = #{contractRequester} ,
+							PERSON_CODE_IN_CHARGE = #{personCodeInCharge} ,
+							DESCRIPTION = #{description}
+		WHERE CONTRACT_NO = #{contractNo}
+	</update>
+
+	<resultMap type="kr.co.seoulit.logistics.busisvc.logisales.to.ContractDetailTO" id="contractDetailResult">
+		<result property="contractDetailNo" column="CONTRACT_DETAIL_NO"  />
+		<result property="contractNo" column="CONTRACT_NO"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfContract" column="UNIT_OF_CONTRACT"  />
+		<result property="dueDateOfContract" column="DUE_DATE_OF_CONTRACT"  />
+		<result property="estimateAmount" column="ESTIMATE_AMOUNT"  />
+		<result property="stockAmountUse" column="STOCK_AMOUNT_USE"  />
+		<result property="productionRequirement" column="PRODUCTION_REQUIREMENT"  />
+		<result property="unitPriceOfContract" column="UNIT_PRICE_OF_CONTRACT"  />
+		<result property="sumPriceOfContract" column="SUM_PRICE_OF_CONTRACT"  />
+		<result property="processingStatus" column="PROCESSING_STATUS" />
+		<result property="operationCompletedStatus" column="OPERATION_COMPLETED_STATUS"  />
+		<result property="deliveryCompletionStatus" column="DELIVERY_COMPLETION_STATUS"  />
+		<result property="description" column="DESCRIPTION"  />
+	</resultMap>
+
+	<parameterMap type="map" id="insertContractDetailParameter">
+		<parameter property="estimateNo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="contractType" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="contractRequester" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="personCodeInCharge" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="discription" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="newContractNo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="customerCode" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+		<parameter property="RESULT" javaType="java.sql.ResultSet" jdbcType="CURSOR" mode="OUT" resultMap="contractDetailResult"/>
+	</parameterMap>
+
+	<resultMap id="insertContractDetailResult" type="kr.co.seoulit.logistics.busisvc.logisales.to.ContractDetailTO">
+		<result property="contractDetailNo" column="CONTRACT_DETAIL_NO"/>
+	</resultMap>
+
+	<insert id="insertContractDetail" parameterMap="insertContractDetailParameter" statementType="CALLABLE">
+		<![CDATA[
+		{call P_REGISTER_NEW_CONTRACT(?,?,?,?,?,?,?,?,?,?)}
+		]]>
+	</insert>
+
+	<select id="selectContractDetailList" parameterType="String" resultMap="contractDetailResult">
+		SELECT * FROM CONTRACT_DETAIL WHERE CONTRACT_NO = #{contractNo}
+	</select>
+
+	<select id="selectDeliverableContractDetailList" parameterType="String" resultMap="contractDetailResult">
+		SELECT * FROM CONTRACT_DETAIL WHERE CONTRACT_NO = #{contractNo}
+	</select>
+
+	<select id="selectContractDetailCount" parameterType="String" resultMap="contractDetailResult">
+		SELECT * FROM CONTRACT_DETAIL WHERE CONTRACT_NO = #{contractNo}
+	</select>
+
+	<resultMap type="kr.co.seoulit.logistics.busisvc.logisales.to.ContractDetailInMpsAvailableTO" id="contractDetailInMpsAvailableResult">
+		<result property="contractNo" column="CONTRACT_NO"  />
+		<result property="contractType" column="CONTRACT_TYPE"  />
+		<result property="contractDate" column="CONTRACT_DATE"  />
+		<result property="customerCode" column="CUSTOMER_CODE"  />
+		<result property="contractDetailNo" column="CONTRACT_DETAIL_NO"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfContract" column="UNIT_OF_CONTRACT"  />
+		<result property="estimateAmount" column="ESTIMATE_AMOUNT"  />
+		<result property="stockAmountUse" column="STOCK_AMOUNT_USE"  />
+		<result property="productionRequirement" column="PRODUCTION_REQUIREMENT"  />
+		<result property="dueDateOfContract" column="DUE_DATE_OF_CONTRACT"  />
+		<result property="description" column="DESCRIPTION"  />
+	</resultMap>
+
+	<select id="selectContractDetailListInMpsAvailable" parameterType="map" resultMap="contractDetailInMpsAvailableResult">
+		SELECT C.CONTRACT_NO,
+		C.CONTRACT_TYPE,
+		C.CONTRACT_DATE,
+		C.CUSTOMER_CODE,
+		CD.CONTRACT_DETAIL_NO,
+		CD.ITEM_CODE,
+		CD.ITEM_NAME,
+		CD.UNIT_OF_CONTRACT,
+		CD.ESTIMATE_AMOUNT,
+		CD.STOCK_AMOUNT_USE,
+		CD.PRODUCTION_REQUIREMENT,
+		CD.DUE_DATE_OF_CONTRACT,
+		CD.DESCRIPTION
+		FROM contract_detail CD,CONTRACT C
+		WHERE C.CONTRACT_NO = cd.contract_no
+		AND PROCESSING_STATUS ='PLANNING' 			/*null에서 PLANNING로 수정 함 */
+		AND operation_completed_status ='PLANNING'  /*null에서 PLANNING로 수정 함 */
+		<if test='searchCondition=="contractDate"'>
+			AND TO_DATE(C.CONTRACT_DATE,'YYYY-MM-DD') BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+		</if>
+		<if test='searchCondition=="dueDateOfContract"'>
+			AND TO_DATE(CD.DUE_DATE_OF_CONTRACT,'YYYY-MM-DD') BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+		</if>
+	</select>
+
+	<update id="changeMpsStatusOfContractDetail" parameterType="map">
+		UPDATE CONTRACT_DETAIL SET PROCESSING_STATUS = #{mpsStatus} WHERE CONTRACT_DETAIL_NO = #{contractDetailNo}
+	</update>
+
+	<delete id="deleteContractDetail" parameterType="kr.co.seoulit.logistics.busisvc.logisales.to.ContractDetailTO">
+		DELETE FROM CONTRACT_DETAIL WHERE CONTRACT_DETAIL_NO = #{contractDetailNo}
+	</delete>
+
+	<!--	플렌가능 수주상세조회-->
+	<select id="selectContractDetailListInProcessPlanAvailable" parameterType="map" resultMap="contractDetailInMpsAvailableResult">
+		SELECT C.CONTRACT_NO,
+		C.CONTRACT_TYPE,
+		C.CONTRACT_DATE,
+		C.CUSTOMER_CODE,
+		CD.CONTRACT_DETAIL_NO,
+		CD.ITEM_CODE,
+		CD.ITEM_NAME,
+		CD.UNIT_OF_CONTRACT,
+		CD.ESTIMATE_AMOUNT,
+		CD.STOCK_AMOUNT_USE,
+		CD.PRODUCTION_REQUIREMENT,
+		CD.DUE_DATE_OF_CONTRACT,
+		CD.DESCRIPTION
+		FROM contract_detail CD,CONTRACT C
+		WHERE C.CONTRACT_NO = cd.contract_no
+		AND PROCESSING_STATUS ='Y'    /*PLANNING에서 Y로 수정 함 */
+		AND operation_completed_status ='PLANNING'
+		<if test='searchCondition=="contractDate"'>
+			AND TO_DATE(C.CONTRACT_DATE,'YYYY-MM-DD') BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+		</if>
+		<if test='searchCondition=="dueDateOfContract"'>
+			AND TO_DATE(CD.DUE_DATE_OF_CONTRACT,'YYYY-MM-DD') BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+		</if>
+	</select>
+
+	<resultMap type="kr.co.seoulit.logistics.busisvc.logisales.to.ProcessPlanTO" id="planResult">
+		<result property="contractDetailNo" column="CONTRACT_DETAIL_NO"  />
+	</resultMap>
+
+	<parameterMap type="map" id="processPlanParameter">
+		<parameter property="contractDetailNo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="contractType" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="stockAmountUse" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+		<parameter property="RESULT" javaType="java.sql.ResultSet" jdbcType="CURSOR" mode="OUT" resultMap="planResult" />
+	</parameterMap>
+
+	<update id="processPlan" parameterMap="processPlanParameter" statementType="CALLABLE">
+        <![CDATA[
+		{call P_PROCESSPLAN(?,?,?,?,?,?)}
+		]]>
+    </update>
+
+</mapper>

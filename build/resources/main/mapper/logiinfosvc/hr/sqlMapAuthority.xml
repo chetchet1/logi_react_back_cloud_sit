@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.seoulit.logistics.logiinfosvc.hr.mapper.AuthorityMapper">
+
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.AuthorityGroupTO" id="authorityGroupResult">
+		<result property="authority" column="AUTHORITY" />
+		<result property="authorityGroupCode" column="AUTHORITY_GROUP_CODE" />
+		<result property="authorityGroupName" column="AUTHORITY_GROUP_NAME" />
+	</resultMap>
+	
+	<select id="selectUserAuthorityGroupList" parameterType="String" resultMap="authorityGroupResult">
+		SELECT T1.*, DECODE(emp_code, NULL, 0, 1) AS authority
+          		FROM AUTHORITY_GROUP T1, (SELECT *
+          		  FROM EMPLOYEE_AUTHORITY 
+          		 WHERE emp_code=#{empCode}) T2 
+          		 WHERE T1.AUTHORITY_GROUP_CODE = T2.AUTHORITY_GROUP_CODE(+)
+          		 ORDER BY T1.AUTHORITY_GROUP_CODE
+	</select>
+	
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.AuthorityInfoGroupTO" id="authorityGroupInfoResult">
+		<result property="authorityGroupCode" column="AUTHORITY_GROUP_CODE" />
+		<result property="authorityGroupName" column="AUTHORITY_GROUP_NAME" />
+	</resultMap>
+	
+	<select id="selectAuthorityGroupList" resultMap="authorityGroupInfoResult">
+		SELECT * FROM AUTHORITY_GROUP
+	</select>
+	
+	<insert id="insertEmployeeAuthorityGroup" parameterType="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeAuthorityTO">
+		INSERT INTO EMPLOYEE_AUTHORITY VALUES(#{empCode}, #{authorityGroupCode})		
+	</insert>
+
+	<delete id="deleteEmployeeAuthorityGroup" parameterType="String">
+		DELETE EMPLOYEE_AUTHORITY WHERE EMP_CODE=#{empCode}
+	</delete>
+
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.AuthorityGroupMenuTO" id="authorityGroupMenuResult">
+		<result property="menuCode" column="MENU_CODE" />
+		<result property="menuName" column="MENU_NAME" />
+	</resultMap>
+	
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.MenuAuthorityTO" id="menuAuthorityResult">
+		<result property="authority" column="AUTHORITY" />
+		<result property="authorityGroupCode" column="AUTHORITY_GROUP_CODE" />
+		<result property="menuCode" column="MENU_CODE" />
+		<result property="menuName" column="MENU_NAME" />
+		<result property="menuLevel" column="MENU_LEVEL" />
+	</resultMap>
+	
+	<select id="selectUserMenuAuthorityList" parameterType="String" resultMap="authorityGroupMenuResult">
+		SELECT m.menu_code, 
+	          		       m.MENU_NAME
+	          		  FROM AUTHORITY_GROUP_MENU a,
+	          		       MENU m 
+	          		 WHERE a.MENU_CODE = m.MENU_CODE
+	          		       AND AUTHORITY_GROUP_CODE IN
+	          		       (SELECT AUTHORITY_GROUP_CODE 
+	          		         FROM EMPLOYEE_AUTHORITY
+	          		        WHERE EMP_CODE = #{empCode})
+	</select>
+	
+	<select id="selectMenuAuthorityList" parameterType="String" resultMap="menuAuthorityResult">
+		<![CDATA[
+		SELECT m.MENU_CODE,
+	          		       m.MENU_NAME,
+	          		       m.MENU_LEVEL,
+	          						a. AUTHORITY_GROUP_CODE,
+	          		        CASE 
+	          		        WHEN  MENU_LEVEL = '0' THEN '-1'
+	          		        WHEN MENU_LEVEL = '1' AND CHILD_MENU IS NOT NULL THEN '-2' 
+	          		        WHEN AUTHORITY_GROUP_CODE IS NOT NULL AND MENU_LEVEL <> '0' THEN '1'
+	          		        ELSE '0' END authority 
+	          		  FROM MENU m, 
+	          		       (SELECT *  
+	          		         FROM AUTHORITY_GROUP_MENU  
+	          		        WHERE AUTHORITY_GROUP_CODE=#{authorityGroupCode} 
+	          		       ) a 
+	          		 WHERE m.MENU_CODE = a.MENU_CODE(+)  
+	          		ORDER BY m.MENU_CODE
+	     ]]>
+	</select>
+	
+	
+	<insert id="insertMenuAuthority" parameterType="kr.co.seoulit.logistics.logiinfosvc.hr.to.MenuAuthorityTO">
+		INSERT INTO AUTHORITY_GROUP_MENU VALUES(#{authorityGroupCode},#{menuCode})	
+	</insert>
+
+	<delete id="deleteMenuAuthority" parameterType="String">
+		DELETE AUTHORITY_GROUP_MENU WHERE AUTHORITY_GROUP_CODE=#{authorityGroupCode}
+	</delete>
+	
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.MenuTO" id="menuResult">
+		<result property="childMenu" column="CHILD_MENU" />
+		<result property="menuCode" column="MENU_CODE" />
+		<result property="menuLevel" column="MENU_LEVEL" />
+		<result property="menuName" column="MENU_NAME" />
+		<result property="menuStatus" column="MENU_STATUS" />
+		<result property="menuURL" column="MENU_URL" />
+		<result property="navMenu" column="NAV_MENU" />
+		<result property="navMenuName" column="NAV_MENU_NAME" />
+		<result property="parentMenuCode" column="PARENT_MENU_CODE" />
+	</resultMap>
+
+	<select id="selectAllMenuList" resultMap="menuResult">
+		select * from menu order by menu_code
+	</select>
+
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.UserMenuTO" id="userMenuResult">
+		<result property="no" column="NO" />
+		<result property="menuLevel" column="MENU_LEVEL" />
+		<result property="menuOrder" column="MENU_ORDER" />
+		<result property="menuName" column="MENU_NAME" />
+		<result property="leaf" column="LEAF" />
+		<result property="url" column="URL" />
+		<result property="isAccessDenied" column="IS_ACCESS_DENIED" />
+	</resultMap>
+	
+	<select id="selectUserMenuCodeList" parameterType="map" resultMap="userMenuResult">
+		SELECT * FROM
+					(SELECT  ROWNUM AS NO
+							,LEVEL AS MENU_LEVEL
+							,CONNECT_BY_ISLEAF LEAF
+							,MENU_ORDER
+							,MENU_NAME
+							,URL
+							,IS_ACCESS_DENIED
+					 FROM (
+					 		SELECT  T1.MENU_CODE
+					 			   ,URL
+					 			   ,MENU_NAME
+					 			   ,MENU_ORDER
+					 			   ,IS_ACCESS_DENIED
+					 			   ,IS_ACCESS_DENIED_NOT_PRINTED
+					 			   ,PARENT_MENU_CODE
+					 		FROM  MENU T1
+					 			 ,MENU_AVAILABLE_BY_POSITION T2
+					 		WHERE T1.MENU_CODE = T2.MENU_CODE
+					 		AND	  T1.WORKPLACE_CODE = #{workplaceCode}
+					 		AND	  DEPT_CODE = #{deptCode}
+					 		AND	  POSITION_CODE = #{positionCode}
+					 		AND   IS_ACCESS_DENIED_NOT_PRINTED IS NULL)
+					 		START WITH PARENT_MENU_CODE IS NULL
+					 		CONNECT BY PRIOR MENU_CODE = PARENT_MENU_CODE ORDER SIBLINGS BY MENU_ORDER)
+				WHERE  ( MENU_LEVEL = 3 )
+					OR ( MENU_LEVEL = 2 AND LEAF = 0 )
+					OR ( MENU_LEVEL = 2 AND LEAF = 1 AND URL IS NOT NULL )
+					OR ( MENU_LEVEL = 1 AND LEAF = 0 )
+					OR MENU_ORDER = 0
+				ORDER BY NO
+	</select>
+	
+</mapper>

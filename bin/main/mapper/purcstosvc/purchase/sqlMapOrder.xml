@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.seoulit.logistics.purcstosvc.purchase.mapper.OrderMapper">
+
+	<resultMap type="kr.co.seoulit.logistics.purcstosvc.purchase.to.OrderTempTO" id="orderTempResult">
+		<result property="mrpGatheringNo" column="MRP_GATHERING_NO"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfMrp" column="UNIT_OF_MRP"  />
+		<result property="requiredAmount" column="REQUIRED_AMOUNT"  />
+		<result property="stockAmount" column="STOCK_AMOUNT"  />
+		<result property="orderDate" column="ORDER_DATE"  />
+		<result property="requiredDate" column="REQUIRED_DATE" />			
+	</resultMap>
+	
+	<parameterMap type="map" id="getOrderListParameter">
+		<parameter property="startDate" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="endDate" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+		<parameter property="RESULT" javaType="java.sql.ResultSet" jdbcType="CURSOR" mode="OUT" resultMap="orderTempResult" />
+	</parameterMap>
+	
+	<select id="getOrderList" parameterMap="getOrderListParameter" statementType="CALLABLE">
+		<![CDATA[
+		{call P_ORDERLIST_OPEN(?,?,?,?,?)}
+		]]>
+	</select>
+
+	<resultMap type="kr.co.seoulit.logistics.purcstosvc.purchase.to.OrderDialogTempTO" id="orderDialogTempResult">			
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfMrp" column="UNIT_OF_MRP"  />
+		<result property="requiredAmount" column="REQUIRED_AMOUNT"  />
+		<result property="stockAmount" column="STOCK_AMOUNT"  />  
+		<result property="calculatedRequiredAmount" column="CALCULATED_REQUIRED_AMOUNT"  />
+		<result property="standardUnitPrice" column="STANDARD_UNIT_PRICE"  />
+		<result property="sumPrice" column="SUM_PRICE" />	
+	</resultMap>
+	
+	<parameterMap type="map" id="getOrderDialogInfoParameter">
+		<parameter property="mrpNoList" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />			
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+		<parameter property="RESULT" javaType="java.sql.ResultSet" jdbcType="CURSOR" mode="OUT" resultMap="orderDialogTempResult"/>
+	</parameterMap>
+	
+	<select id="getOrderDialogInfo" parameterMap="getOrderDialogInfoParameter" statementType="CALLABLE">
+		<![CDATA[
+		{call P_ORDER_DIALOG_OPEN(?,?,?,?)}
+		]]>
+	</select>
+	
+	<parameterMap type="map" id="orderParameter">
+		<parameter property="mpsNoList" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />			
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+	</parameterMap>
+	
+	<select id="order" parameterMap="orderParameter" statementType="CALLABLE">
+		<![CDATA[
+		{call P_ORDER(?,?,?)}
+		]]>
+	</select>
+	
+	<parameterMap type="map" id="optionOrderParameter">
+		<parameter property="itemCode" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="itemAmount" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />				
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+	</parameterMap>
+	
+	<select id="optionOrder" parameterMap="optionOrderParameter" statementType="CALLABLE">
+		<![CDATA[
+		{call P_OPTION_ORDER(?,?,?,?)}
+		]]>
+	</select>
+
+	<resultMap type="kr.co.seoulit.logistics.purcstosvc.purchase.to.OrderInfoTO" id="orderInfoResult">			
+		<result property="orderNo" column="ORDER_NO"  />
+		<result property="orderDate" column="ORDER_DATE"  />
+		<result property="orderInfoStatus" column="ORDER_INFO_STATUS"  />
+		<result property="orderSort" column="ORDER_SORT"  />
+		<result property="itemCode" column="ITEM_CODE"  />  
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="orderAmount" column="ORDER_AMOUNT"  />
+		<result property="inspectionStatus" column="INSPECTION_STATUS"  />	
+	</resultMap>
+	
+	<select id="getOrderInfoListOnDelivery" resultMap="orderInfoResult">
+		select * from order_info where ORDER_INFO_STATUS = '운송중' OR ORDER_INFO_STATUS = '검사완료'
+	</select>
+	
+	<select id="getOrderInfoList" parameterType="map" resultMap="orderInfoResult">
+		select * from order_info
+		where to_date(order_date,'YY-MM-DD') between to_date(#{startDate},'YY-MM-DD') AND to_date(#{endDate},'YY-MM-DD')
+	</select>		
+	
+	<parameterMap type="map" id="updateOrderInfoParameter">
+		<parameter property="orderNoList" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />				
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+	</parameterMap>
+	<select id="updateOrderInfo" parameterMap="updateOrderInfoParameter" statementType="CALLABLE">
+		<![CDATA[
+		{call P_INSPECTION(?,?,?)}
+		]]>
+	</select>
+</mapper>

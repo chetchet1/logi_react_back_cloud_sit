@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.19.1.final using JasperReports Library version 6.19.1-867c00bf88cd4d784d404379d6c05e1b419e8a4c  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report4" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="1c79dc27-6f00-4f22-9dc1-29f494e7e6dd">
+	<property name="ireport.zoom" value="1.6105100000000199"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="494"/>
+	<subDataset name="dataset1" uuid="e3655236-4486-4359-a689-77ea4f962605"/>
+	<subDataset name="dataset2" uuid="d0b6cb5d-9520-4068-952b-423de63697f3"/>
+	<parameter name="ESTIMATE_DATE" class="java.lang.String">
+		<parameterDescription><![CDATA[견적일자]]></parameterDescription>
+	</parameter>
+	<parameter name="ESTIMATE_NO" class="java.lang.String">
+		<parameterDescription><![CDATA[견적번호]]></parameterDescription>
+	</parameter>
+	<parameter name="ITEM_CODE" class="java.lang.String">
+		<parameterDescription><![CDATA[품번]]></parameterDescription>
+	</parameter>
+	<parameter name="ITEM_NAME" class="java.lang.String">
+		<parameterDescription><![CDATA[품명]]></parameterDescription>
+	</parameter>
+	<parameter name="UNIT_OF_ESTIMATE" class="java.lang.String">
+		<parameterDescription><![CDATA[단위]]></parameterDescription>
+	</parameter>
+	<parameter name="ESTIMATE_AMOUNT" class="java.lang.String">
+		<parameterDescription><![CDATA[수량]]></parameterDescription>
+	</parameter>
+	<parameter name="UNIT_PRICE_OF_ESTIMATE" class="java.lang.String">
+		<parameterDescription><![CDATA[품목단가+부가세]]></parameterDescription>
+	</parameter>
+	<parameter name="SUM_PRICE_OF_ESTIMATE" class="java.lang.String">
+		<parameterDescription><![CDATA[합계금액]]></parameterDescription>
+	</parameter>
+	<parameter name="CUSTOMER_NAME" class="java.lang.String">
+		<parameterDescription><![CDATA[거래처 이름]]></parameterDescription>
+	</parameter>
+	<parameter name="CUSTOMER_TEL_NUMBER" class="java.lang.String">
+		<parameterDescription><![CDATA[거래처 전화번호]]></parameterDescription>
+	</parameter>
+	<parameter name="CUSTOMER_FAX_NUMBER" class="java.lang.String">
+		<parameterDescription><![CDATA[거래처 팩스 번호]]></parameterDescription>
+	</parameter>
+	<parameter name="orderDraftNo" class="java.lang.String"/>
+	<parameter name="iReportFolderPath" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+ESTIMATE.*,
+ESTIMATE_DETAIL.*,
+ITEM.*,
+CUSTOMER.*,
+ESTIMATE_DETAIL.SUM_PRICE_OF_ESTIMATE*0.1 TAX,
+(ESTIMATE_DETAIL.UNIT_PRICE_OF_ESTIMATE*ESTIMATE_DETAIL.ESTIMATE_AMOUNT)+(ESTIMATE_DETAIL.SUM_PRICE_OF_ESTIMATE*0.1) TOTALAMOUNT
+FROM
+ESTIMATE ESTIMATE INNER JOIN ESTIMATE_DETAIL ESTIMATE_DETAIL ON ESTIMATE.ESTIMATE_NO = ESTIMATE_DETAIL.ESTIMATE_NO
+INNER JOIN CUSTOMER CUSTOMER ON ESTIMATE.CUSTOMER_CODE = CUSTOMER.CUSTOMER_CODE
+INNER JOIN ITEM ITEM ON ESTIMATE_DETAIL.ITEM_CODE = ITEM.ITEM_CODE
+WHERE ESTIMATE.ESTIMATE_NO = $P{orderDraftNo}]]>
+	</queryString>
+	<field name="ESTIMATE_NO" class="java.lang.String"/>
+	<field name="CUSTOMER_CODE" class="java.lang.String"/>
+	<field name="ESTIMATE_DATE" class="java.lang.String"/>
+	<field name="CONTRACT_STATUS" class="java.lang.String"/>
+	<field name="ESTIMATE_REQUESTER" class="java.lang.String"/>
+	<field name="EFFECTIVE_DATE" class="java.lang.String"/>
+	<field name="PERSON_CODE_IN_CHARGE" class="java.lang.String"/>
+	<field name="DESCRIPTION" class="java.lang.String"/>
+	<field name="ESTIMATE_DETAIL_NO" class="java.lang.String"/>
+	<field name="ITEM_CODE" class="java.lang.String"/>
+	<field name="ITEM_NAME" class="java.lang.String"/>
+	<field name="UNIT_OF_ESTIMATE" class="java.lang.String"/>
+	<field name="DUE_DATE_OF_ESTIMATE" class="java.lang.String"/>
+	<field name="ESTIMATE_AMOUNT" class="java.math.BigDecimal"/>
+	<field name="UNIT_PRICE_OF_ESTIMATE" class="java.math.BigDecimal"/>
+	<field name="SUM_PRICE_OF_ESTIMATE" class="java.math.BigDecimal"/>
+	<field name="ITEM_GROUP_CODE" class="java.lang.String"/>
+	<field name="ITEM_CLASSIFICATION" class="java.lang.String"/>
+	<field name="UNIT_OF_STOCK" class="java.lang.String"/>
+	<field name="LOSS_RATE" class="java.lang.String"/>
+	<field name="LEAD_TIME" class="java.lang.String"/>
+	<field name="STANDARD_UNIT_PRICE" class="java.math.BigDecimal"/>
+	<field name="WORKPLACE_CODE" class="java.lang.String"/>
+	<field name="CUSTOMER_NAME" class="java.lang.String"/>
+	<field name="CUSTOMER_TYPE" class="java.lang.String"/>
+	<field name="CUSTOMER_CEO" class="java.lang.String"/>
+	<field name="BUSINESS_LICENSE_NUMBER" class="java.lang.String"/>
+	<field name="SOCIAL_SECURITY_NUMBER" class="java.lang.String"/>
+	<field name="CUSTOMER_BUSINESS_CONDITIONS" class="java.lang.String"/>
+	<field name="CUSTOMER_BUSINESS_ITEMS" class="java.lang.String"/>
+	<field name="CUSTOMER_ZIP_CODE" class="java.lang.String"/>
+	<field name="CUSTOMER_BASIC_ADDRESS" class="java.lang.String"/>
+	<field name="CUSTOMER_DETAIL_ADDRESS" class="java.lang.String"/>
+	<field name="CUSTOMER_TEL_NUMBER" class="java.lang.String"/>
+	<field name="CUSTOMER_FAX_NUMBER" class="java.lang.String"/>
+	<field name="CUSTOMER_NOTE" class="java.lang.String"/>
+	<field name="TAX" class="java.math.BigDecimal"/>
+	<field name="TOTALAMOUNT" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="33" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="33" uuid="5b9865fc-db5b-479c-9a0e-18991e6f1f4e"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="33" uuid="e5563f51-a40d-4942-8c8d-9ba81520280f"/>
+				<textElement textAlignment="Center">
+					<font fontName="궁서체" size="14" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[견        적        서]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="160" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="100" height="20" uuid="6d79bc1d-a9e0-4d47-90f2-5a6d9ab8ddec"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="20" width="100" height="20" uuid="f8eee2c3-162a-480f-96de-663fc1e9df19"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="0" width="100" height="20" uuid="d7dd8d2d-8757-41e6-ab0e-4790b2b19058"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="20" width="100" height="20" uuid="25cde42e-d52f-4f95-beab-658294404960"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="100" y="0" width="186" height="20" uuid="4deeea6f-144d-489d-bb86-b8e8cec4ef94"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="100" y="0" width="186" height="20" uuid="a9449fea-f2e2-4913-bcf3-67afe1c59213"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="386" y="0" width="169" height="20" uuid="cc742487-718d-483d-a018-729168fd1fdb"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="386" y="20" width="169" height="20" uuid="6623c662-77a1-4671-b58a-8a3333313684"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="40" width="100" height="20" uuid="3ce69153-1c3d-4869-9e3b-2ae6ed84c1cb"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="60" width="100" height="20" uuid="a986f0a4-d5df-40f2-b013-78a645bcc353"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="80" width="100" height="20" uuid="5477ed11-6360-4ab7-997a-a034f3732da2"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="100" width="100" height="20" uuid="70b5e5f5-c440-47f3-915a-0d449e8b8218"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="40" width="286" height="60" uuid="ac3581d4-0d47-4d3c-9088-5c33d43deca6"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="100" width="286" height="20" uuid="65d5a6c4-a177-401d-ae4f-7829610f8276"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="386" y="40" width="169" height="20" uuid="8ef26b2e-4c7e-4ca1-b651-03cc6ce1d376"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="386" y="60" width="169" height="20" uuid="5439cb62-179f-4589-b106-943ef31a804b"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="386" y="80" width="169" height="20" uuid="00b9a126-0d1f-425b-a289-0d78b0be7b3e"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="386" y="100" width="169" height="20" uuid="36cb3ebf-3b74-4f5f-8fb4-fdedb32c0b6f"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="120" width="100" height="20" uuid="a5c5110a-1809-47b1-a89f-e68bc12f1f11"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="100" y="120" width="455" height="20" uuid="7822c602-8805-4a3c-baa4-70e8bc1bcfa6"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="140" width="555" height="20" uuid="8357860f-8484-47ac-8808-99fdc6511cdd"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="21" y="0" width="64" height="20" uuid="7c394d2f-edaa-42d9-87a4-8de94a3fcbfe"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[견  적  일  자]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="308" y="0" width="64" height="20" uuid="3cc42d0e-d994-4c80-993a-2a674c2965e3"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[사  업  장  명]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="21" y="20" width="64" height="20" uuid="f3384896-b5e2-47ef-b476-6c1ef510ebf5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[견  적  번  호]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="308" y="20" width="64" height="20" uuid="a94b8cca-a4ee-446d-914a-03aa3f957396"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[사  업  자  No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="308" y="40" width="64" height="20" uuid="84138d7a-dc76-4e5c-aff3-1dc4af561183"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[업             태]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="308" y="60" width="64" height="20" uuid="0c46ef46-c1f9-4d8d-8a66-9174e67d55b8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[업             종]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="308" y="100" width="64" height="20" uuid="7b664391-5b92-4e14-b19f-d406fafc7759"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[소     재     지]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="308" y="80" width="64" height="20" uuid="9882c61e-378c-4235-87cf-eef6355f546a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[T E L / F A X]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="21" y="120" width="64" height="20" uuid="19225b28-d295-4f9d-aab3-8c650036f143"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[견  적  금  액]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="140" width="64" height="20" uuid="fc097321-d5d9-49c7-8a2e-c7d01deff0d8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 견  적  명  세]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="100" y="20" width="186" height="20" uuid="1f8f2fd3-0e8a-4de7-af09-bdd45a8f46ea"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="386" y="0" width="169" height="20" uuid="65811a1e-7bbd-4c87-a515-7bbdb6b1d185"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ (주)세계전자 본사]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="386" y="20" width="169" height="20" uuid="3e6d6864-7d3d-488a-94dd-6569d3d7f1bd"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 120-81-25847]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="386" y="40" width="169" height="20" uuid="7b826168-db6d-44b2-ad03-4756e88e1e13"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 제조, 도·소매]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="386" y="60" width="169" height="20" uuid="21750965-abea-4887-86dc-3900ff767aa6"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 전자제품 외]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="386" y="80" width="169" height="20" uuid="b1bd3189-cdbc-4854-bd22-07bd339c1cff"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ TEL : 02)567-1094 FAX : 02)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="386" y="100" width="169" height="20" uuid="9b28d570-c9bd-4469-a511-370ab2a7278f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 서울 강남구 삼성동 512]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="80" width="44" height="20" uuid="74f86114-ab7d-485c-9d3d-ede5e8479793"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[T E L  : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="143" y="80" width="43" height="20" uuid="f2936e1d-339e-478c-8cee-975f597a1ea9"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[F A X  : ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="100" y="20" width="186" height="20" uuid="cb423c48-0580-41c6-868a-682670c0025f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ESTIMATE_NO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="0" width="186" height="20" uuid="19c95962-4028-4623-8cd9-97e72c692c25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ESTIMATE_DATE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="40" width="286" height="40" uuid="d0711655-13fa-4a22-90f7-87b57474b256"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CUSTOMER_NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="44" y="80" width="99" height="20" uuid="ca5d0e44-0543-4221-9fb9-a0a806cec888"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CUSTOMER_TEL_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="186" y="80" width="100" height="20" uuid="e6a20742-39c9-43f5-9891-a57f4e7ffd84"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CUSTOMER_FAX_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="120" width="455" height="20" uuid="38f00f27-11d8-40bb-9e54-ee2b7fbe0643"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SUM_PRICE_OF_ESTIMATE}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="20" uuid="5077af9a-1985-45cc-a9d9-157406aec1b6"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="100" y="0" width="152" height="20" uuid="cc8bd3e7-27d7-4d80-b7d5-398292a94c38"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="252" y="0" width="34" height="20" uuid="cd5d3e8f-4c0a-413c-8c71-9afcc915099c"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="0" width="46" height="20" uuid="ed2fa220-bda2-4d10-8440-3742d27e2f72"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="332" y="0" width="102" height="20" uuid="70cdf39b-7518-4145-82e1-98fb9ff9cda8"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="434" y="0" width="121" height="20" uuid="86ebed44-c3e7-486b-a7db-a97c42f2ff30"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="100" height="20" uuid="7690b9e8-598b-4002-b4e2-e8a80b1a715b"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="434" y="0" width="121" height="20" uuid="e06da3b9-7391-4702-a8fa-ce57eab59192"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[합계액]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="0" width="100" height="20" uuid="872ae327-a6cd-4a43-b174-4baf8d5c65f0"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[품번]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="100" y="0" width="152" height="20" uuid="dc4ce43e-ee17-4a97-9124-5049d2feaffa"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[품명]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="252" y="0" width="34" height="20" uuid="6f4e4118-2651-4cdf-a412-5432d8447c6f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[단위]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="286" y="0" width="46" height="20" uuid="0f750212-cc5d-4396-8312-c1fe8a604ab1"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[수량]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="332" y="0" width="102" height="20" uuid="f57adc9a-376e-4950-9eaf-e879ed93b044"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[단가]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="20" uuid="bc2f4712-6cc3-4edc-91f6-f64646238352"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="100" height="20" uuid="c5949361-7d70-4db1-bf4d-5c423f85c9df"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="252" y="0" width="34" height="20" uuid="d0122b80-1e1f-415a-841e-4a59201c5d1a"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="0" width="46" height="20" uuid="bab7bf7c-d4ae-4f23-805c-aed8e003afab"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="332" y="0" width="102" height="20" uuid="601c037a-2864-4afc-84cc-de042fec455c"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="434" y="0" width="121" height="20" uuid="cbe2188e-974f-49ad-a803-42fad5ff3475"/>
+			</rectangle>
+			<textField>
+				<reportElement x="0" y="0" width="100" height="20" uuid="0285464c-1761-46fc-a0ef-4324e0e79fe3"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ITEM_CODE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="286" y="0" width="46" height="20" uuid="24257a8a-fe43-4edc-b7d2-7e5d919c9302"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ESTIMATE_AMOUNT}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="100" y="0" width="152" height="20" uuid="d4215791-3f54-48fb-b0bf-cae09d9a1597"/>
+			</rectangle>
+			<textField>
+				<reportElement x="100" y="0" width="152" height="20" uuid="581707b0-20a0-4148-adaa-3ba8f3b9e69e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ITEM_NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="334" y="0" width="100" height="20" uuid="5997b32b-409f-46c6-9c32-a120952bffc2"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{UNIT_PRICE_OF_ESTIMATE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="434" y="0" width="121" height="20" uuid="edb6b321-80bc-421e-863c-8adc04d964e6"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SUM_PRICE_OF_ESTIMATE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="252" y="0" width="34" height="20" uuid="3b1c1f30-b239-4e86-afa5-0edd905690fc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{UNIT_OF_ESTIMATE}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="100" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="80" width="286" height="20" uuid="091fad0f-299d-4331-9dcb-9ef93a96b775"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="80" width="269" height="20" uuid="8c5d469c-f4bc-4a30-9252-a3eb90e63fdd"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="60" width="555" height="20" uuid="eb3de382-e900-458b-8f19-a87a2f56bec3"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="40" width="286" height="20" uuid="d91c1b31-e2f9-44fb-8be4-45f9c9500e66"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="40" width="269" height="20" uuid="48794112-9c0d-4c12-9a98-fa53ce334326"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="20" width="286" height="20" uuid="54953230-503d-439c-a27d-a54c9572dc5f"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="286" y="20" width="269" height="20" uuid="1aaa31b5-5af2-4e35-aa42-8daf03f774fb"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="20" uuid="e189ccb6-464c-4f2d-bbe4-ba5c33a978cf"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="20" uuid="6c78c21d-f460-4a19-baa9-7bac76a1341e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 견  적  조  건]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="20" width="286" height="20" uuid="1ec4ae83-bba6-44b8-b78b-1da11dcb5022"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 1. 제 품 보 증 : 무상보증 6개월]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="286" y="20" width="269" height="20" uuid="c22b85fa-2b3e-4124-a9f7-294074f59677"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 2. 견 적 유 효 기 간 : 견적 후 15일]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="40" width="286" height="20" uuid="e863bdc2-a3fb-4ac0-93fc-3cdd00a9628a"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ 3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="286" y="40" width="269" height="20" uuid="06fe095e-f6bc-4690-b277-73a03c470e78"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ 4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="60" width="100" height="20" uuid="9985ea3c-8377-4d52-bb35-615216300ce1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[ 특 기 사 항]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="80" width="286" height="20" uuid="8c153a2c-1783-425e-86ce-74bae574567b"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ 1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="286" y="80" width="269" height="20" uuid="26edb3e4-c0ad-42f6-84d1-2cb9cc6820e7"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ 2.]]></text>
+			</staticText>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band height="66" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="42" uuid="ff716395-2a1b-440e-bb09-5286ff429a4a"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="517" y="11" width="23" height="20" uuid="e14b1f8d-02be-40cb-be72-61e693ac41bf"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[(인)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="383" y="11" width="125" height="20" uuid="7947b516-75f9-4b2b-8cff-494c2c3e563d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[(주)삼성전자 회장  김형준]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="388" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="20" width="555" height="368" uuid="a09461cc-9e49-4b7f-b5c2-ff61948a855d"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="20" uuid="f70fcfcf-43fe-41d7-8316-5daf7e59d7c3"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="123" height="20" uuid="1d137af9-fe8d-408b-8af5-7f6c9ca3d807"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="0" width="123" height="20" uuid="80aa1d82-8c86-4045-bfda-471638589a5f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[소 계 ( 부가세 포함금액 )]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="540" y="0" width="15" height="20" uuid="7500dfb6-1c08-4974-a2ae-20fc5bd05711"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="궁서체" pdfFontName="HYGSRB.TTF" pdfEncoding="Identity-H"/>
+				</textElement>
+				<text><![CDATA[원]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="434" y="0" width="106" height="20" uuid="3efd79c8-224e-47ba-ad39-c6082d3b57c4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{TOTALAMOUNT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

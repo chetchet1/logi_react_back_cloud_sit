@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.seoulit.logistics.logiinfosvc.hr.mapper.EmpMapper">
+
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeBasicTO" id="resultEmpBasicMap">
+     		<result property="companyCode" column="COMPANY_CODE"  />
+			<result property="empCode" column="EMP_CODE"  />
+			<result property="empName" column="EMP_NAME"  />
+			<result property="empEngName" column="EMP_ENG_NAME"  />
+			<result property="socialSecurityNumber" column="SOCIAL_SECURITY_NUMBER"  />
+			<result property="hireDate" column="HIRE_DATE"  />
+			<result property="retirementDate" column="RETIREMENT_DATE"  />
+			<result property="userOrNot" column="USER_OR_NOT"  />
+			<result property="birthDate" column="BIRTH_DATE"  />
+			<result property="gender" column="GENDER"  />
+			<collection property="empDetailTOList" select="kr.co.seoulit.logistics.logiinfosvc.hr.mapper.EmpMapper.selectEmployeeDetailList" 
+				column="COMPANY_CODE, EMP_CODE" />
+			<collection property="empSecretTOList" select="kr.co.seoulit.logistics.logiinfosvc.hr.mapper.EmpMapper.selectEmployeeSecretList" 
+				column="COMPANY_CODE, EMP_CODE" />
+	</resultMap>
+	<select id="selectEmployeeBasicList" parameterType="String" resultMap="resultEmpBasicMap">
+		SELECT * 
+		FROM EMPLOYEE_BASIC 
+		WHERE COMPANY_CODE = #{companyCode}
+	</select>
+	<select id="selectEmployeeBasicTO" parameterType="map" resultMap="resultEmpBasicMap">
+		SELECT *
+		FROM EMPLOYEE_BASIC
+		WHERE COMPANY_CODE = #{companyCode}
+		AND EMP_CODE = #{empCode}
+	</select>
+	<insert id="insertEmployeeBasic" parameterType="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeBasicTO">
+		Insert into EMPLOYEE_BASIC 
+				( COMPANY_CODE , EMP_CODE , EMP_NAME , EMP_ENG_NAME , 
+				SOCIAL_SECURITY_NUMBER , HIRE_DATE , RETIREMENT_DATE , 
+				USER_OR_NOT , BIRTH_DATE , GENDER ) 
+				values ( #{companyCode} ,
+			 			 #{empCode} ,
+			 			 #{empName} , 
+						 #{empEngName} , 
+						 #{socialSecurityNumber} , 
+						 #{hireDate} , 
+						 #{retirementDate} , 
+			 			 #{userOrNot} , 
+						 #{birthDate} , 
+						 #{gender} 
+						 )
+	</insert>
+	<update id="changeUserAccountStatus" parameterType="map">
+     		UPDATE EMPLOYEE_BASIC 
+     		SET USER_OR_NOT = #{userStatus} 
+     		WHERE COMPANY_CODE = #{companyCode}
+     		AND EMP_CODE = #{empCode}
+	</update>
+
+   	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeDetailTO" id="employeeDetailResult">
+   		<result property="companyCode" column="COMPANY_CODE"  />
+		<result property="empCode" column="EMP_CODE"  />
+		<result property="seq" column="SEQ"  />
+		<result property="updateHistory" column="UPDATE_HISTORY"  />
+		<result property="updateDate" column="UPDATE_DATE"  />
+		<result property="workplaceCode" column="WORKPLACE_CODE"  />
+		<result property="deptCode" column="DEPT_CODE"  />
+		<result property="positionCode" column="POSITION_CODE"  />
+		<result property="userId" column="USER_ID"  />
+		<result property="phoneNumber" column="PHONE_NUMBER"  />
+		<result property="email" column="EMAIL"  />
+		<result property="zipCode" column="ZIP_CODE"  />
+		<result property="basicAddress" column="BASIC_ADDRESS"  />
+		<result property="detailAddress" column="DETAIL_ADDRESS"  />
+		<result property="levelOfEducation" column="LEVEL_OF_EDUCATION"  />
+		<result property="image" column="IMAGE" />
+   	</resultMap>
+    	
+	<select id="selectEmployeeDetailList" parameterType="map" resultMap="employeeDetailResult">
+		SELECT * 
+		FROM EMPLOYEE_DETAIL 
+		WHERE COMPANY_CODE = #{companyCode}  
+		AND EMP_CODE = #{empCode}
+	</select>
+	
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeDetailTO" id="employeeIdResult">
+		<result property="empCode" column="EMP_CODE"  />
+		<result property="userId" column="USER_ID"  />
+   	</resultMap>
+	<select id="selectUserIdList"  parameterType="String" resultMap="employeeIdResult">
+		WITH DETAIL_INFO AS
+		( ( SELECT EMP_CODE, USER_ID, SEQ FROM EMPLOYEE_DETAIL WHERE COMPANY_CODE = #{companyCode} ) ),
+		
+		MAX_SEQ AS( SELECT EMP_CODE, MAX(SEQ) AS SEQFROM FROM DETAIL_INFO
+		GROUP BY EMP_CODE ), 
+		
+		ALL_USER_ID AS 
+		(
+		SELECT EMP_CODE, USER_ID
+		FROM DETAIL_INFO
+		WHERE ( EMP_CODE, SEQ ) IN ( SELECT EMP_CODE, SEQ FROM MAX_SEQ ) 
+		)
+		
+		SELECT EMP_CODE
+			 , USER_ID 
+		FROM ALL_USER_ID 
+		WHERE USER_ID IS NOT NULL
+		ORDER BY EMP_CODE
+	</select>
+	
+	<insert id="insertEmployeeDetail" parameterType="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeDetailTO">
+		INSERT INTO EMPLOYEE_DETAIL 
+				 (COMPANY_CODE , EMP_CODE , 
+				  SEQ , UPDATE_HISTORY , 
+				  UPDATE_DATE , WORKPLACE_CODE ,
+				  DEPT_CODE , POSITION_CODE , 
+				  USER_ID , PHONE_NUMBER , 
+				  EMAIL , ZIP_CODE ,
+				  BASIC_ADDRESS , DETAIL_ADDRESS , 
+				  LEVEL_OF_EDUCATION, IMAGE)
+		  VALUES ( #{companyCode} , 
+		  		   #{empCode} , 
+				   #{seq} ,  
+				   #{updateHistory} , 
+				   #{updateDate} ,  
+				   #{workplaceCode} , 
+				   #{deptCode} ,  
+				   #{positionCode} , 
+				   #{userId} ,  
+				   #{phoneNumber} , 
+				   #{email} ,  
+				   #{zipCode} , 
+				   #{basicAddress} ,  
+				   #{detailAddress} , 
+				   #{levelOfEducation} ,  
+				   #{image} 
+				 )
+	</insert>
+
+    <resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeSecretTO" id="employeeSecretResult">
+    	<result property="companyCode" column="COMPANY_CODE"  />
+		<result property="empCode" column="EMP_CODE"  />
+		<result property="seq" column="SEQ"  />
+		<result property="userPassword" column="USER_PASSWORD"  />		
+	</resultMap>
+	
+	<select id="selectEmployeeSecretList"  parameterType="map" resultMap="employeeSecretResult">
+		SELECT * 
+		FROM EMPLOYEE_SECRET 
+		WHERE COMPANY_CODE = #{companyCode} 
+		AND EMP_CODE = #{empCode}
+	</select>
+	
+	<select id="selectUserPassWord"  parameterType="map" resultMap="employeeSecretResult">
+			SELECT EMP_CODE, COMPANY_CODE, SEQ, USER_PASSWORD
+			FROM EMPLOYEE_SECRET
+			WHERE ( EMP_CODE, COMPANY_CODE, SEQ) IN 
+			( SELECT EMP_CODE, COMPANY_CODE, MAX(SEQ) FROM EMPLOYEE_SECRET 
+		    	GROUP BY EMP_CODE, COMPANY_CODE )
+			AND COMPANY_CODE = #{companyCode} AND EMP_CODE = #{empCode}
+	</select>
+	
+	<insert id="insertEmployeeSecret" parameterType="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmployeeSecretTO">
+		Insert into EMPLOYEE_SECRET ( COMPANY_CODE , EMP_CODE , SEQ, USER_PASSWORD )
+		values ( #{companyCode} , #{empCode} , #{seq} , #{userPassword} )
+	</insert>
+	
+	<select id="selectUserPassWordCount"  parameterType="map" resultType="int">
+		SELECT COUNT(*) 
+		FROM EMPLOYEE_SECRET 
+		WHERE COMPANY_CODE = #{companyCode} 
+		AND EMP_CODE = #{empCode}
+	</select>
+ 
+    <resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmpInfoTO" id="empInfoResult">
+    	<result property="socialSecurityNumber" column="SOCIAL_SECURITY_NUMBER" />
+    	<result property="companyCode" column="COMPANY_CODE" />
+		<result property="empCode" column="EMP_CODE" />
+		<result property="empName" column="EMP_NAME" />
+		<result property="empEngName" column="EMP_ENG_NAME" />			
+		<result property="hireDate" column="HIRE_DATE" />
+		<result property="retirementDate" column="RETIREMENT_DATE" />
+		<result property="userOrNot" column="USER_OR_NOT" /> 
+		<result property="birthDate" column="BIRTH_DATE" />
+		<result property="gender" column="GENDER" />
+		<result property="seq" column="SEQ" />
+		<result property="updateHistory" column="UPDATE_HISTORY" />
+		<result property="updateDate" column="UPDATE_DATE" />
+		<result property="workplaceCode" column="WORKPLACE_CODE" />
+		<result property="workplaceName" column="WORKPLACE_NAME" />
+		<result property="deptCode" column="DEPT_CODE" />
+		<result property="deptName" column="DEPT_NAME" />
+		<result property="positionCode" column="POSITION_CODE" />
+		<result property="positionName" column="POSITION_NAME" />
+		<result property="userId" column="USER_ID" />
+		<result property="phoneNumber" column="PHONE_NUMBER" />
+		<result property="email" column="EMAIL" />
+		<result property="zipCode" column="ZIP_CODE" />
+		<result property="basicAddress" column="BASIC_ADDRESS" />
+		<result property="detailAddress" column="DETAIL_ADDRESS" />
+		<result property="levelOfEducation" column="LEVEL_OF_EDUCATION" />
+		<result property="image" column="IMAGE" />
+		<collection property="CompanyTOList" resultMap="kr.co.seoulit.logistics.logiinfosvc.compinfo.mapper.CompInfoMapper.companyResult2" 
+			 javaType="java.util.ArrayList"/>
+<!-- 		<result property="empDetailTOList" select="emp.selectEmployeeDetailList" 
+			column="COMPANY_CODE, EMP_CODE" />
+		<result property="empSecretTOList" select="emp.selectEmployeeSecretList" 
+			column="COMPANY_CODE, EMP_CODE" /> -->
+	</resultMap>
+	
+	<select id="getTotalEmpInfo"  parameterType="map" resultMap="empInfoResult">
+		SELECT *
+		FROM 
+			( SELECT E1.EMP_CODE, E1.COMPANY_CODE, E1.EMP_NAME, E1.EMP_ENG_NAME, E1.HIRE_DATE, E1.RETIREMENT_DATE, 
+				E1.USER_OR_NOT, E1.SOCIAL_SECURITY_NUMBER, E1.BIRTH_DATE, E1.GENDER, 
+				E2.SEQ, E2.UPDATE_HISTORY, E2.UPDATE_DATE, E2.USER_ID, E2.WORKPLACE_CODE, W.WORKPLACE_NAME,
+				E2.DEPT_CODE, E2.PHONE_NUMBER, E2.ZIP_CODE, E2.BASIC_ADDRESS, E2.DETAIL_ADDRESS, 
+				E2.LEVEL_OF_EDUCATION, E2.IMAGE, E2.POSITION_CODE, E2.EMAIL, 
+				P.POSITION_NAME, D.DEPT_NAME 
+			FROM EMPLOYEE_BASIC E1, EMPLOYEE_DETAIL E2, WORKPLACE W, POSITION P, DEPARTMENT D 
+				WHERE E1.EMP_CODE = E2.EMP_CODE AND E1.COMPANY_CODE = W.COMPANY_CODE AND E2.WORKPLACE_CODE = W.WORKPLACE_CODE  
+				AND E2.WORKPLACE_CODE = P.WORKPLACE_CODE AND E2.DEPT_CODE = P.DEPT_CODE AND E2.POSITION_CODE = P.POSITION_CODE  
+				AND E2.WORKPLACE_CODE = D.WORKPLACE_CODE AND E2.DEPT_CODE = D.DEPT_CODE 
+				AND ( E2.EMP_CODE, E2.SEQ ) IN ( SELECT EMP_CODE, MAX(SEQ) FROM EMPLOYEE_DETAIL GROUP BY EMP_CODE ) ) T1  
+		WHERE T1.COMPANY_CODE = #{companyCode} AND T1.WORKPLACE_CODE = #{workplaceCode} AND T1.USER_ID = #{userId}
+	</select>
+		
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.hr.to.EmpInfoTO" id="selectAllEmpResult">
+		<result property="companyCode" column="COMPANY_CODE"/>
+		<result property="empCode" column="EMP_CODE"/>
+		<result property="userOrNot" column="USER_OR_NOT"/>
+		<result property="userId" column="USER_ID"/>
+		<result property="empName" column="EMP_NAME"/>
+		<result property="deptName" column="DEPT_NAME"/>
+		<result property="positionName" column="POSITION_NAME"/>
+		<result property="image" column="IMAGE"/>
+	</resultMap>
+	
+	<select id="selectAllEmpList" parameterType="map" resultMap="selectAllEmpResult">
+		WITH ALL_EMP_INFO AS
+			( SELECT E1.COMPANY_CODE, E1.EMP_CODE, E1.EMP_NAME, E1.EMP_ENG_NAME, E1.HIRE_DATE, E1.RETIREMENT_DATE,
+			E1.USER_OR_NOT, E1.SOCIAL_SECURITY_NUMBER, E1.BIRTH_DATE, E1.GENDER,
+			E2.SEQ, E2.UPDATE_HISTORY, E2.UPDATE_DATE, E2.USER_ID, E2.WORKPLACE_CODE,
+			E2.DEPT_CODE, D.DEPT_NAME, E2.PHONE_NUMBER, E2.ZIP_CODE, E2.BASIC_ADDRESS, E2.DETAIL_ADDRESS, 
+			E2.LEVEL_OF_EDUCATION, E2.IMAGE, E2.EMAIL, E2.POSITION_CODE, P.POSITION_NAME
+			FROM
+			( SELECT * FROM EMPLOYEE_BASIC WHERE COMPANY_CODE = #{companyCode} ) E1, 
+			EMPLOYEE_DETAIL E2, DEPARTMENT D, POSITION P
+			WHERE E1.COMPANY_CODE = E2.COMPANY_CODE (+) AND E1.EMP_CODE = E2.EMP_CODE (+) 
+			AND E2.WORKPLACE_CODE = D.WORKPLACE_CODE (+) AND E2.DEPT_CODE = D.DEPT_CODE (+) 
+			AND E2.WORKPLACE_CODE = P.WORKPLACE_CODE (+) AND E2.DEPT_CODE = P.DEPT_CODE (+) 
+			AND E2.POSITION_CODE = P.POSITION_CODE (+)
+			ORDER BY E1.COMPANY_CODE, E1.EMP_CODE, P.POSITION_CODE ) ,
+			 
+			MAX_SEQ AS 
+			( SELECT COMPANY_CODE, EMP_CODE, MAX(SEQ) AS SEQ 
+			FROM EMPLOYEE_DETAIL GROUP BY COMPANY_CODE, EMP_CODE )
+			 
+			SELECT COMPANY_CODE, EMP_CODE, USER_ID, EMP_NAME, DEPT_NAME, POSITION_NAME, USER_OR_NOT, IMAGE 
+			FROM ALL_EMP_INFO
+		<where>
+			<choose>
+				<when test='searchCondition == "ALL"'>
+					( COMPANY_CODE, EMP_CODE, SEQ ) IN ( SELECT COMPANY_CODE, EMP_CODE, SEQ FROM MAX_SEQ )
+				</when>
+				<when test='searchCondition == "WORKPLACE"'>
+					( COMPANY_CODE, EMP_CODE, SEQ ) IN ( SELECT COMPANY_CODE, EMP_CODE, SEQ FROM MAX_SEQ )
+					AND WORKPLACE_CODE = #{workplaceCode}
+				</when>
+				<when test='searchCondition == "DEPT"'>
+					( COMPANY_CODE, EMP_CODE, SEQ ) IN ( SELECT COMPANY_CODE, EMP_CODE, SEQ FROM MAX_SEQ )
+					AND DEPT_CODE = #{deptCode}
+				</when>
+				<when test='searchCondition == "RETIREMENT"'>
+					USER_OR_NOT = 'N' AND USER_ID IS NULL
+				</when>
+			</choose>
+		</where>
+	</select>
+	
+</mapper>

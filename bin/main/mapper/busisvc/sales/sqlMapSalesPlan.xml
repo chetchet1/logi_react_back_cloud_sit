@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.seoulit.logistics.busisvc.logisales.mapper.SalesPlanMapper">
+
+	<resultMap id="salesPlanResult" type="kr.co.seoulit.logistics.busisvc.logisales.to.SalesPlanTO">
+		<result property="unitPriceOfSales" column="UNIT_PRICE_OF_SALES"/>
+		<result property="salesAmount" column="SALES_AMOUNT"/>
+		<result property="salesPlanNo" column="SALES_PLAN_NO"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="salesPlanDate" column="SALES_PLAN_DATE"/>
+		<result property="sumPriceOfSales" column="SUM_PRICE_OF_SALES"/>
+		<result property="itemCode" column="ITEM_CODE"/>
+		<result property="dueDateOfSales" column="DUE_DATE_OF_SALES"/>
+		<result property="unitOfSales" column="UNIT_OF_SALES"/>
+		<result property="mpsApplyStatus" column="MPS_APPLY_STATUS"/>
+		<result property="itemName" column="ITEM_NAME"/>
+	</resultMap>
+	
+ 	<resultMap  id="salesPlanInMpsAvailableResult" type="kr.co.seoulit.logistics.prodcsvc.production.to.SalesPlanInMpsAvailableTO">
+		<result property="salesPlanNo" column="SALES_PLAN_NO"/>
+		<result property="itemCode" column="ITEM_CODE"/>
+		<result property="itemName" column="ITEM_NAME"/>
+		<result property="unitOfSales" column="UNIT_OF_SALES"/>
+		<result property="salesPlanDate" column="SALES_PLAN_DATE"/>
+		<result property="dueDateOfSales" column="DUE_DATE_OF_SALES"/>
+		<result property="salesAmount" column="SALES_AMOUNT"/>
+		<result property="mpsApplyStatus" column="MPS_APPLY_STATUS"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="sumPriceOfSales" column="SUM_PRICE_OF_SALES"/>
+		<result property="unitPriceOfSales" column="UNIT_PRICE_OF_SALES"/>
+	</resultMap>
+	
+	<select id="selectSalesPlanList" parameterType="map" resultMap="salesPlanResult">
+			 SELECT * 
+			 FROM SALES_PLAN 
+			 WHERE ( 
+			 		CASE #{dateSearchCondition} 
+			   			WHEN 'salesPlanDate' THEN TO_DATE(SALES_PLAN_DATE, 'YYYY-MM-DD')
+						WHEN 'dueDateOfSales' THEN TO_DATE(DUE_DATE_OF_SALES, 'YYYY-MM-DD') 
+			   		END 
+			   	   )
+			 BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	</select>
+	
+	<select id="selectSalesPlanCount" parameterType="String" resultType="Integer">	 
+		SELECT COUNT(*) 
+		FROM SALES_PLAN 
+		WHERE TO_DATE(SALES_PLAN_DATE, 'YYYY-MM-DD') = TO_DATE(#{salesPlanDate}, 'YYYY-MM-DD')
+	</select>
+	
+	<select id="selectSalesPlanListInMpsAvailable" parameterType="map" resultMap="salesPlanResult">
+		SELECT * 
+		FROM SALES_PLAN
+		WHERE MPS_APPLY_STATUS IS NULL 
+		AND ( 
+			 CASE #{searchCondition}
+			 	 WHEN 'salesPlanDate' THEN TO_DATE(SALES_PLAN_DATE, 'YYYY-MM-DD') 
+			 	 WHEN 'dueDateOfSales' THEN TO_DATE(DUE_DATE_OF_SALES, 'YYYY-MM-DD') 
+			 END 
+			)
+		BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+	</select>
+	
+	<insert id="insertSalesPlan" parameterType="kr.co.seoulit.logistics.busisvc.logisales.to.SalesPlanTO" >
+		INSERT INTO SALES_PLAN ( SALES_PLAN_NO, 
+								 ITEM_CODE, ITEM_NAME,
+								 SALES_PLAN_DATE, 
+								 UNIT_OF_SALES, 
+								 DUE_DATE_OF_SALES,
+								 SALES_AMOUNT, 
+								 UNIT_PRICE_OF_SALES, 
+								 SUM_PRICE_OF_SALES,
+								 MPS_APPLY_STATUS, 
+								 DESCRIPTION
+							   ) 
+						VALUES ( #{salesPlanNo}, 
+								 #{itemCode}, 
+								 #{itemName}, 
+								 #{salesPlanDate}, 
+								 #{unitOfSales}, 
+								 #{dueDateOfSales}, 
+								 #{salesAmount}, 
+								 #{unitPriceOfSales}, 
+								 #{sumPriceOfSales}, 
+								 #{mpsApplyStatus}, 
+								 #{description}
+								)
+	</insert>
+	
+	<update id="updateSalesPlan" parameterType="kr.co.seoulit.logistics.busisvc.logisales.to.SalesPlanTO">
+		UPDATE SALES_PLAN SET ITEM_CODE = #{itemCode} , 
+							  ITEM_NAME = #{itemName} , 
+							  SALES_PLAN_DATE = #{salesPlanDate} ,
+							  UNIT_OF_SALES = #{unitOfSales} , 
+							  DUE_DATE_OF_SALES = #{dueDateOfSales} ,
+						   	  SALES_AMOUNT = #{salesAmount} , 
+						   	  UNIT_PRICE_OF_SALES = #{unitPriceOfSales} ,
+							  SUM_PRICE_OF_SALES = #{sumPriceOfSales} , 
+							  MPS_APPLY_STATUS = #{mpsApplyStatus} ,
+							  DESCRIPTION = #{description}
+		WHERE SALES_PLAN_NO = #{salesPlanNo}
+	</update>
+	
+	<update id="changeMpsStatusOfSalesPlan" parameterType="map">
+		UPDATE SALES_PLAN SET MPS_APPLY_STATUS = #{mpsStatus} 
+		WHERE SALES_PLAN_NO = #{salesPlanNo}
+	</update>
+	
+	<delete id="deleteSalesPlan" parameterType="String">
+		DELETE FROM SALES_PLAN WHERE SALES_PLAN_NO = #{salesPlanNo}
+	</delete>
+	
+</mapper>
+	

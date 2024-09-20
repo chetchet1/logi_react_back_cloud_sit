@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.seoulit.logistics.purcstosvc.purchase.mapper.OutSourcingMapper">
+
+	<resultMap type="kr.co.seoulit.logistics.purcstosvc.purchase.to.OutSourcingTO" id="resultOutSourcingMap">
+		<result property="checkStatus" column="CHECK_STATUS"  />
+		<result property="completeStatus" column="COMPLETE_STATUS"  />
+		<result property="customerCode" column="CUSTOMER_CODE"  />
+		<result property="instructAmount" column="INSTRUCTION_AMOUNT"  />
+		<result property="instructDate" column="INSTRUCT_DATE"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="materialStatus" column="MATERIAL_STATUS" />
+		<result property="outsourcingDate" column="OUTSOURCING_DATE" />
+		<result property="outsourcingNo" column="OUTSOURCING_NO" />
+		<result property="totalPrice" column="TOTAL_PRICE" />
+		<result property="unitPrice" column="UNIT_PRICE" />
+		<result property="completeDate" column="COMPLETE_DATE" />
+		<result property="customerName" column="CUSTOMER_NAME" />
+	</resultMap>
+	
+	<select id="selectOutSourcingList" parameterType="map" resultMap="resultOutSourcingMap">
+		SELECT OS.OUTSOURCING_NO
+			,OS.MATERIAL_STATUS
+			,OS.CUSTOMER_CODE
+			,TO_CHAR(OS.INSTRUCT_DATE,'YYYY-MM-DD') AS INSTRUCT_DATE
+			,TO_CHAR(OS.COMPLETE_DATE,'YYYY-MM-DD') AS COMPLETE_DATE
+			,OS.ITEM_CODE
+			,OS.INSTRUCTION_AMOUNT
+			,OS.COMPLETE_STATUS
+			,OS.CHECK_STATUS
+			,OS.UNIT_PRICE
+			,OS.TOTAL_PRICE
+			,TO_CHAR(OS.OUTSOURCING_DATE,'YYYY-MM-DD') AS OUTSOURCING_DATE
+			,I.ITEM_NAME
+      		,C.CUSTOMER_NAME
+			FROM OUTSOURCING OS,ITEM I,CUSTOMER C
+			WHERE OS.ITEM_CODE=I.ITEM_CODE
+			AND   OS.CUSTOMER_CODE=C.CUSTOMER_CODE
+			AND   TO_CHAR(OUTSOURCING_DATE,'YYYY-MM-DD') BETWEEN #{fromDate} AND #{toDate}
+			<if test='customerCode!="null" or customerCode!=""'>
+            	AND OS.CUSTOMER_CODE=#{customerCode}
+			</if>
+			<if test='materialStatus!="null" or materialStatus!=""'>
+	         	AND OS.MATERIAL_STATUS=#{materialStatus}
+	    	</if>
+		 	<if test='itemCode!="null" or materialStatus!=""'>
+	            AND I.ITEM_CODE=#{itemCode}
+	        </if>
+	</select>
+	
+</mapper>

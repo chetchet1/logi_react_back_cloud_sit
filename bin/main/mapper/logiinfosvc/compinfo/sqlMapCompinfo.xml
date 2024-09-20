@@ -1,0 +1,660 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.seoulit.logistics.logiinfosvc.compinfo.mapper.CompInfoMapper">
+
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.AddressTO" id="addressResult">
+		<result property="addressNo" column="ADDRESS_NO" />
+		<result property="cnt" column="CNT" />
+		<result property="zipCode" column="ZIP_CODE" />
+		<result property="addressType" column="ADDRESS_TYPE" />
+		<result property="address" column="ADDRESS" />
+		<result property="sidoCode" column="SIDO_CODE" />
+	</resultMap>
+
+	<select id="selectSidoCode" parameterType="map" resultMap="addressResult">
+		SELECT * FROM ADDR_SIDO WHERE SIDO_NAME = #{sidoName}
+	</select>
+
+	<select id="selectRoadNameAddressList" parameterType="map" resultMap="addressResult">
+		WITH BASIC_ADDRESS_DATA AS
+		(
+		SELECT * FROM ADDRESS_${sidoCode}
+		WHERE (
+		ROAD_NAME = REPLACE ( #{searchValue} , ' ' , '')
+
+		<if test='buildingMainNumber!=null'>
+			AND BUILDING_MAIN_NUMBER = #{buildingMainNumber}
+		</if>
+		) OR SIGUNGU_BUILDING_NAME = REPLACE( #{searchValue}, ' ' , '') ),
+		
+		GET_ADDRESS AS
+		( SELECT ZIP_CODE,
+		SIDO || ' ' || SIGUNGU || ' ' ||
+		( CASE WHEN TOWN IS NULL THEN '' ELSE TOWN || ' ' END ) ||
+		ROAD_NAME || ' ' || BUILDING_MAIN_NUMBER ||
+		( CASE WHEN BUILDING_SUB_NUMBER = 0 THEN ''
+		ELSE '-' || BUILDING_SUB_NUMBER END ) ||
+		( CASE WHEN DONG_NAME IS NULL AND SIGUNGU_BUILDING_NAME IS NULL THEN
+		''
+		ELSE ' (' END ) || DONG_NAME ||
+		( CASE WHEN DONG_NAME IS NULL OR SIGUNGU_BUILDING_NAME IS NULL THEN ''
+		ELSE ', ' END ) ||
+		SIGUNGU_BUILDING_NAME ||
+		( CASE WHEN DONG_NAME IS NULL AND SIGUNGU_BUILDING_NAME IS NULL THEN
+		''
+		ELSE ')' END ) AS ROAD_NAME_ADDRESS ,
+		SIDO || ' ' || SIGUNGU || ' ' ||
+		( CASE WHEN TOWN IS NULL THEN '' ELSE TOWN || ' ' END ) ||
+		( CASE WHEN DONG_NAME IS NULL THEN '' ELSE DONG_NAME || ' ' END ) ||
+		( CASE WHEN LI IS NULL THEN '' ELSE LI || ' ' END ) ||
+		JIBUN_MAIN_ADDRESS ||
+		( CASE WHEN JIBUN_SUB_ADDRESS = '0' THEN ''
+		ELSE '-' || JIBUN_SUB_ADDRESS END ) AS JIBUN_ADDRESS
+		FROM
+		BASIC_ADDRESS_DATA
+		ORDER BY BUILDING_MAIN_NUMBER, BUILDING_SUB_NUMBER
+		) ,
+
+		GET_ADDRESS_AND_ROWNUM AS
+		( SELECT ROWNUM AS CNT, ZIP_CODE, ROAD_NAME_ADDRESS, JIBUN_ADDRESS
+		FROM GET_ADDRESS ) ,
+
+		GET_DUPLICATION AS
+		( SELECT LPAD( T1.CNT, 4, '0') || '-' || T2.RN AS ADDRESS_NO,
+		T1.CNT,
+		( CASE WHEN RN = 1 THEN '도로명'
+		WHEN RN = 2 THEN '지번' END ) AS ADDRESS_TYPE,
+		T1.ZIP_CODE, T1.ROAD_NAME_ADDRESS, T1.JIBUN_ADDRESS
+		FROM GET_ADDRESS_AND_ROWNUM T1,
+		( SELECT ROWNUM AS RN FROM USER_TABLES WHERE ROWNUM = 3 ) T2
+		ORDER BY ADDRESS_NO )
+
+		SELECT ADDRESS_NO, CNT, ZIP_CODE,
+		( CASE ADDRESS_TYPE WHEN '도로명' THEN ROAD_NAME_ADDRESS
+		WHEN '지번' THEN JIBUN_ADDRESS END ) AS ADDRESS,
+		ADDRESS_TYPE
+		FROM GET_DUPLICATION T1
+		ORDER BY ADDRESS_NO
+
+	</select>
+
+	<select id="selectJibunAddressList" parameterType="map" resultMap="addressResult">
+		WITH BASIC_ADDRESS_DATA AS
+		( SELECT * FROM ADDRESS_${sidoCode}
+		WHERE (
+		DONG_NAME = REPLACE( #{searchValue} , ' ' ,'')
+		<if test="jibunMainAddress!=null">
+			JIBUN_MAIN_ADDRESS = #{jibunMainAddress}
+		</if>
+
+		) OR TOWN = REPLACE( #{searchValue} , ' ' ,'')
+		OR LI = REPLACE( #{searchValue} , ' ' ,'')
+		OR SIGUNGU_BUILDING_NAME = REPLACE( #{searchValue} , ' ' ,'') ) ,
+
+		GET_ADDRESS AS
+		( SELECT ZIP_CODE,
+		SIDO || ' ' || SIGUNGU || ' ' ||
+		( CASE WHEN TOWN IS NULL THEN '' ELSE TOWN || ' ' END ) ||
+		ROAD_NAME || ' ' || BUILDING_MAIN_NUMBER ||
+		( CASE WHEN BUILDING_SUB_NUMBER = 0 THEN ''
+		ELSE '-' || BUILDING_SUB_NUMBER END ) ||
+		( CASE WHEN DONG_NAME IS NULL AND SIGUNGU_BUILDING_NAME IS NULL THEN
+		''
+		ELSE ' (' END ) || DONG_NAME ||
+		( CASE WHEN DONG_NAME IS NULL OR SIGUNGU_BUILDING_NAME IS NULL THEN ''
+		ELSE ', ' END ) ||
+		SIGUNGU_BUILDING_NAME ||
+		( CASE WHEN DONG_NAME IS NULL AND SIGUNGU_BUILDING_NAME IS NULL THEN
+		''
+		ELSE ')' END ) AS ROAD_NAME_ADDRESS ,
+		SIDO || ' ' || SIGUNGU || ' ' ||
+		( CASE WHEN TOWN IS NULL THEN '' ELSE TOWN || ' ' END ) ||
+		( CASE WHEN DONG_NAME IS NULL THEN '' ELSE DONG_NAME || ' ' END ) ||
+		( CASE WHEN LI IS NULL THEN '' ELSE LI || ' ' END ) ||
+		JIBUN_MAIN_ADDRESS ||
+		( CASE WHEN JIBUN_SUB_ADDRESS = '0' THEN ''
+		ELSE '-' || JIBUN_SUB_ADDRESS END ) AS JIBUN_ADDRESS
+		FROM
+		BASIC_ADDRESS_DATA
+		ORDER BY BUILDING_MAIN_NUMBER, BUILDING_SUB_NUMBER
+		) ,
+
+		GET_ADDRESS_AND_ROWNUM AS
+		( SELECT ROWNUM AS CNT, ZIP_CODE, ROAD_NAME_ADDRESS, JIBUN_ADDRESS
+		FROM GET_ADDRESS ) ,
+
+		GET_DUPLICATION AS
+		( SELECT LPAD( T1.CNT, 4, '0') || '-' || T2.RN AS ADDRESS_NO,
+		T1.CNT,
+		( CASE WHEN RN = 1 THEN '도로명'
+		WHEN RN = 2 THEN '지번' END ) AS ADDRESS_TYPE,
+		T1.ZIP_CODE, T1.ROAD_NAME_ADDRESS, T1.JIBUN_ADDRESS
+		FROM GET_ADDRESS_AND_ROWNUM T1,
+		( SELECT ROWNUM AS RN FROM USER_TABLES WHERE ROWNUM = 3 ) T2
+		ORDER BY ADDRESS_NO )
+
+		SELECT ADDRESS_NO, CNT, ZIP_CODE,
+		( CASE ADDRESS_TYPE WHEN '도로명' THEN ROAD_NAME_ADDRESS
+		WHEN '지번' THEN JIBUN_ADDRESS END ) AS ADDRESS,
+		ADDRESS_TYPE
+		FROM GET_DUPLICATION T1
+		ORDER BY ADDRESS_NO
+	</select>
+   
+   	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CompanyTO" id="companyResult">
+   		<result property="companyTelNumber" column="COMPANY_TEL_NUMBER" />
+   		<result property="companyDivision" column="COMPANY_DIVISION" />
+   		<result property="companyBasicAddress" column="COMPANY_BASIC_ADDRESS" />
+   		<result property="companyOpenDate" column="COMPANY_OPEN_DATE" />
+   		<result property="companyBusinessItems" column="COMPANY_BUSINESS_ITEMS" />
+   		<result property="businessLicenseNumber" column="BUSINESS_LICENSE_NUMBER" />
+   		<result property="companyName" column="COMPANY_NAME" />
+   		<result property="companyDetailAddress" column="COMPANY_DETAIL_ADDRESS" />
+   		<result property="companyFaxNumber" column="COMPANY_FAX_NUMBER" />
+   		<result property="companyCeoName" column="COMPANY_CEO_NAME" />
+   		<result property="companyEstablishmentDate" column="COMPANY_ESTABLISHMENT_DATE" />
+   		<result property="companyCode" column="COMPANY_CODE" />
+   		<result property="homepage" column="HOMEPAGE" />
+   		<result property="corporationLicenseNumber" column="CORPORATION_LICENSE_NUMBER" />
+   		<result property="companyBusinessConditions" column="COMPANY_BUSINESS_CONDITIONS" />
+   		<result property="companyZipCode" column="COMPANY_ZIP_CODE" />    		
+   	</resultMap>
+   	
+   	   	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CompanyTO" id="companyResult2">
+   		<result property="companyCode" column="COMPANY_CODE" />	
+   	</resultMap>
+   	
+   	<select id="selectCompanyList" resultMap="companyResult">
+		SELECT * FROM COMPANY ORDER BY COMPANY_CODE
+	</select>
+	
+	<insert id="insertCompany" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CompanyTO">
+		Insert into COMPANY (COMPANY_CODE , COMPANY_NAME , COMPANY_DIVISION ,
+		BUSINESS_LICENSE_NUMBER , CORPORATION_LICENSE_NUMBER , COMPANY_CEO_NAME ,
+		COMPANY_BUSINESS_CONDITIONS , COMPANY_BUSINESS_ITEMS , COMPANY_ZIP_CODE ,
+		COMPANY_BASIC_ADDRESS , COMPANY_DETAIL_ADDRESS , COMPANY_TEL_NUMBER ,
+		COMPANY_FAX_NUMBER , COMPANY_ESTABLISHMENT_DATE , COMPANY_OPEN_DATE ,
+		HOMEPAGE) 
+		values ( #{companyCode} , #{companyName} , #{companyDivision} , #{businessLicenseNumber} 
+		, #{corporationLicenseNumber}  , #{companyCeoName} , #{companyBusinessConditions} , #{companyBusinessItems}
+		, #{companyZipCode} , #{companyBasicAddress} , #{companyDetailAddress}  , #{companyTelNumber} 
+		, #{companyFaxNumber} , #{companyEstablishmentDate} , #{companyOpenDate} , #{homepage} )
+	</insert>
+	   	
+	<update id="updateCompany" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CompanyTO">
+		UPDATE COMPANY 
+			SET COMPANY_NAME = #{companyName} , COMPANY_DIVISION = #{companyDivision} 
+			, BUSINESS_LICENSE_NUMBER = #{businessLicenseNumber} 
+			, CORPORATION_LICENSE_NUMBER = #{corporationLicenseNumber} 
+			, COMPANY_CEO_NAME = #{companyCeoName} , COMPANY_BUSINESS_CONDITIONS = #{companyBusinessConditions}
+			, COMPANY_BUSINESS_ITEMS = #{companyBusinessItems} , COMPANY_ZIP_CODE = #{companyZipCode} 
+			, COMPANY_BASIC_ADDRESS = #{companyBasicAddress} , COMPANY_DETAIL_ADDRESS = #{companyDetailAddress} 
+			, COMPANY_TEL_NUMBER = #{companyTelNumber} , COMPANY_FAX_NUMBER = #{companyFaxNumber} 
+			, COMPANY_ESTABLISHMENT_DATE = #{companyEstablishmentDate} , COMPANY_OPEN_DATE = #{companyOpenDate} 
+			, HOMEPAGE = #{homepage} 
+			WHERE COMPANY_CODE = #{companyCode}
+	</update>
+	   	
+	<delete id="deleteCompany" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CompanyTO">
+		DELETE FROM COMPANY WHERE COMPANY_CODE = #{companyCode}
+	</delete>
+     
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CustomerTO" id="customerResult">
+		<result property="socialSecurityNumber" column="SOCIAL_SECURITY_NUMBER"  />
+		<result property="customerBasicAddress" column="CUSTOMER_BASIC_ADDRESS"  />
+		<result property="customerBusinessConditions" column="CUSTOMER_BUSINESS_CONDITIONS"  />
+		<result property="customerZipCode" column="CUSTOMER_ZIP_CODE"  />
+		<result property="customerDetailAddress" column="CUSTOMER_DETAIL_ADDRESS"  />
+		<result property="customerType" column="CUSTOMER_TYPE"  />
+		<result property="customerNote" column="CUSTOMER_NOTE"  />
+		<result property="businessLicenseNumber" column="BUSINESS_LICENSE_NUMBER"  />
+		<result property="customerCeo" column="CUSTOMER_CEO"  />
+		<result property="customerName" column="CUSTOMER_NAME"  />
+		<result property="customerBusinessItems" column="CUSTOMER_BUSINESS_ITEMS"  />
+		<result property="workplaceCode" column="WORKPLACE_CODE"  />
+		<result property="customerTelNumber" column="CUSTOMER_TEL_NUMBER"  />
+		<result property="customerCode" column="CUSTOMER_CODE"  />
+		<result property="customerFaxNumber" column="CUSTOMER_FAX_NUMBER"  />
+	</resultMap>
+     	
+	<select id="selectCustomerListByCompany" resultMap="customerResult">
+		SELECT * FROM CUSTOMER
+	</select>
+		
+	<select id="selectCustomerListByWorkplace" parameterType="String" resultMap="customerResult">
+		SELECT * FROM CUSTOMER WHERE WORKPLACE_CODE = #{workplaceCode}
+	</select>
+		
+	<select id="selectCustomerListByItem" parameterType="map" resultMap="customerResult">
+			<if test='searchCondition=="ALL"'>
+				SELECT * FROM CUSTOMER
+			</if>
+			<if test='searchCondition=="WORKPLACE"'>
+				SELECT * FROM CUSTOMER WHERE WORKPLACE_CODE = #{workplaceCode}
+			</if>
+			<if test='searchCondition=="ITEM"'>
+				SELECT I.ITEM_CODE
+					  ,I.ITEM_NAME
+					  ,I.ITEM_GROUP_CODE
+					  ,C.CUSTOMER_NAME
+					  ,C.CUSTOMER_CODE
+					FROM CUSTOMER C,ITEM I
+					WHERE C.PRODUCED_PRODUCT=I.ITEM_GROUP_CODE
+					AND I.ITEM_GROUP_CODE=#{itemGroupCode}
+			</if>
+	</select>
+		
+	<insert id="insertCustomer" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CustomerTO">
+		Insert into CUSTOMER \r\n"
+		( CUSTOMER_CODE , WORKPLACE_CODE , CUSTOMER_NAME , CUSTOMER_TYPE , CUSTOMER_CEO ,
+		BUSINESS_LICENSE_NUMBER , SOCIAL_SECURITY_NUMBER , CUSTOMER_BUSINESS_CONDITIONS ,
+		CUSTOMER_BUSINESS_ITEMS , CUSTOMER_ZIP_CODE , CUSTOMER_BASIC_ADDRESS , CUSTOMER_DETAIL_ADDRESS ,
+		CUSTOMER_TEL_NUMBER , CUSTOMER_FAX_NUMBER , CUSTOMER_NOTE )
+		values ( #{customerCode} , #{workplaceCode} , #{customerName} ,
+			     #{customerType} , #{customerCeo} , #{businessLicenseNumber} , 
+				 #{socialSecurityNumber} , #{customerBusinessConditions} ,
+				 #{customerBusinessItems} , #{customerZipCode} , 
+				 #{customerBasicAddress} , #{customerDetailAddress} , 
+				 #{customerTelNumber} , #{customerFaxNumber} , #{customerNote})
+	</insert>
+     	
+     <update id="updateCustomer" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CustomerTO">
+		UPDATE CUSTOMER 
+			SET WORKPLACE_CODE = #{workplaceCode}, CUSTOMER_NAME = #{customerName} 
+				,CUSTOMER_TYPE = #{customerType}, CUSTOMER_CEO = #{customerCeo} 
+				,BUSINESS_LICENSE_NUMBER = #{businessLicenseNumber} 
+				,SOCIAL_SECURITY_NUMBER = #{socialSecurityNumber}
+				,CUSTOMER_BUSINESS_CONDITIONS = #{customerBusinessConditions}
+				,CUSTOMER_BUSINESS_ITEMS = #{customerBusinessItems}
+				,CUSTOMER_ZIP_CODE = #{customerZipCode}
+				,CUSTOMER_BASIC_ADDRESS = #{customerBasicAddress} 
+				,CUSTOMER_DETAIL_ADDRESS = #{customerDetailAddress} 
+				,CUSTOMER_TEL_NUMBER = #{customerTelNumber}
+				,CUSTOMER_FAX_NUMBER = #{customerFaxNumber} 
+				,CUSTOMER_NOTE = #{customerNote} 
+				WHERE CUSTOMER_CODE = #{customerCode}
+	</update>
+		
+	<delete id="deleteCustomer" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CustomerTO">
+		DELETE FROM CUSTOMER WHERE CUSTOMER_CODE = #{customerCode}
+	</delete>
+     
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.DepartmentTO" id="departmentResult">
+		<result property="workplaceName" column="WORKPLACE_NAME"  />
+		<result property="deptName" column="DEPT_NAME"  />
+		<result property="deptCode" column="DEPT_CODE"  />
+		<result property="workplaceCode" column="WORKPLACE_CODE"  />
+		<result property="companyCode" column="COMPANY_CODE"  />
+		<result property="deptEndDate" column="DEPT_END_DATE"  />
+		<result property="deptStartDate" column="DEPT_START_DATE"  />
+	</resultMap>
+     	
+     	<select id="selectDepartmentListByCompany" resultMap="departmentResult">
+			SELECT * FROM DEPARTMENT WHERE COMPANY_CODE = #{companyCode}
+		</select>
+		
+		<select id="selectDepartmentListByWorkplace" resultMap="departmentResult">
+			SELECT * FROM DEPARTMENT WHERE WORKPLACE_CODE = #{workplaceCode}
+		</select>
+     	
+     	<insert id="insertDepartment" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.DepartmentTO">
+			Insert into DEPARTMENT
+			( WORKPLACE_CODE , DEPT_CODE , DEPT_NAME ,
+			WORKPLACE_NAME , COMPANY_CODE ,
+			DEPT_START_DATE , DEPT_END_DATE )
+			values ( #{workplaceCode} , #{deptCode} , #{deptName} 
+					, #{workplaceName} , #{companyCode} , #{deptStartDate} , #{deptEndDate} )
+		</insert>
+		
+		<update id="updateDepartment" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.DepartmentTO">
+     		UPDATE DEPARTMENT SET
+				DEPT_NAME = #{deptName} ,  WORKPLACE_NAME = #{workplaceName} 
+				, COMPANY_CODE = #{companyCode} , DEPT_START_DATE = #{deptStartDate} 
+				, DEPT_END_DATE = #{deptEndDate}
+				WHERE WORKPLACE_CODE = #{workplaceCode} 
+				AND DEPT_CODE = #{deptCode}
+		</update>
+     	
+     	<delete id="deleteDepartment" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.DepartmentTO">
+			DELETE FROM DEPARTMENT
+			WHERE WORKPLACE_CODE = #{workplaceCode} AND DEPT_CODE = #{deptCode}
+		</delete>
+	
+    	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.FinancialAccountAssociatesTO" id="financialAccountAssociatesResult">
+    		<result property="accountOpenPlace" column="ACCOUNT_OPEN_PLACE"  />
+			<result property="financialAccountNote" column="FINANCIAL_ACCOUNT_NOTE"  />
+			<result property="financialInstituteName" column="FINANCIAL_INSTITUTE_NAME"  />
+			<result property="cardType" column="CARD_TYPE"  />
+			<result property="businessLicenseNumber" column="BUSINESS_LICENSE_NUMBER"  />
+			<result property="cardNumber" column="CARD_NUMBER"  />
+			<result property="cardOpenPlace" column="CARD_OPEN_PLACE"  />
+			<result property="accountAssociatesType" column="ACCOUNT_ASSOCIATES_TYPE"  />
+			<result property="financialInstituteCode" column="FINANCIAL_INSTITUTE_CODE"  />
+			<result property="workplaceCode" column="WORKPLACE_CODE"  />
+			<result property="cardMemberName" column="CARD_MEMBER_NAME"  />
+			<result property="accountAssociatesCode" column="ACCOUNT_ASSOCIATES_CODE"  />
+			<result property="accountNumber" column="ACCOUNT_NUMBER"  />
+			<result property="accountAssociatesName" column="ACCOUNT_ASSOCIATES_NAME"  />
+    	</resultMap>
+    		
+    	<select id="selectFinancialAccountAssociatesListByCompany" resultMap="financialAccountAssociatesResult">
+			SELECT * FROM FINANCIAL_ACCOUNT_ASSOCIATES
+		</select>
+     	
+     	<select id="selectFinancialAccountAssociatesListByWorkplace" parameterType="String" resultMap="financialAccountAssociatesResult">
+			SELECT * FROM FINANCIAL_ACCOUNT_ASSOCIATES WHERE WORKPLACE_CODE = #{workplaceCode}
+		</select>
+     	
+     	<insert id="insertFinancialAccountAssociates" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.FinancialAccountAssociatesTO">
+			INSERT INTO FINANCIAL_ACCOUNT_ASSOCIATES 
+						( ACCOUNT_ASSOCIATES_CODE , WORKPLACE_CODE , ACCOUNT_ASSOCIATES_NAME , 
+						ACCOUNT_ASSOCIATES_TYPE , ACCOUNT_NUMBER , ACCOUNT_OPEN_PLACE , 
+						CARD_NUMBER , CARD_TYPE , CARD_MEMBER_NAME , 
+						CARD_OPEN_PLACE , BUSINESS_LICENSE_NUMBER , FINANCIAL_INSTITUTE_CODE , 
+						FINANCIAL_INSTITUTE_NAME , FINANCIAL_ACCOUNT_NOTE ) 
+				VALUES (#{accountAssociatesCode} , #{workplaceCode} , 
+		 		 	    #{accountAssociatesName} , #{accountAssociatesType} , 
+		 		 		#{accountNumber} , #{cardOpenPlace} , 
+		 		 		#{cardNumber} , #{cardType} , 
+		 		 		#{cardMemberName} , #{cardOpenPlace} , 
+		 		 		#{businessLicenseNumber} , #{financialInstituteCode} , 
+		 		 		#{financialInstituteName} , #{financialAccountNote})
+		</insert>
+		
+		<update id="updateFinancialAccountAssociates" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.FinancialAccountAssociatesTO">
+     		UPDATE FINANCIAL_ACCOUNT_ASSOCIATES SET 
+				WORKPLACE_CODE = #{workplaceCode} , 
+				ACCOUNT_ASSOCIATES_NAME = #{accountAssociatesName} , 
+				ACCOUNT_ASSOCIATES_TYPE = #{accountAssociatesType} ,
+				ACCOUNT_NUMBER = #{accountNumber} , 
+				ACCOUNT_OPEN_PLACE = #{cardOpenPlace} , 
+				CARD_NUMBER = #{cardNumber} ,
+				CARD_TYPE = #{cardType} , 
+				CARD_MEMBER_NAME = #{cardMemberName} , 
+				CARD_OPEN_PLACE = #{cardOpenPlace} ,
+				BUSINESS_LICENSE_NUMBER = #{businessLicenseNumber} , 
+				FINANCIAL_INSTITUTE_CODE = #{financialInstituteCode} ,
+				FINANCIAL_INSTITUTE_NAME = #{financialInstituteName} , 
+				FINANCIAL_ACCOUNT_NOTE = #{financialAccountNote}
+				WHERE ACCOUNT_ASSOCIATES_CODE = #{accountAssociatesCode}
+		</update>
+		
+		<delete id="deleteFinancialAccountAssociates" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.FinancialAccountAssociatesTO">
+			DELETE FROM FINANCIAL_ACCOUNT_ASSOCIATES WHERE ACCOUNT_ASSOCIATES_CODE = #{accountAssociatesCode}
+		</delete>
+     
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.WorkplaceTO" id="workplaceResult">
+    	<result property="workplaceCeoName" column="WORKPLACE_CEO_NAME"  />
+		<result property="isMainOffice" column="IS_MAIN_OFFICE"  />
+		<result property="workplaceDetailAddress" column="WORKPLACE_DETAIL_ADDRESS"  />
+		<result property="workplaceBusinessConditions" column="WORKPLACE_BUSINESS_CONDITIONS"  />
+		<result property="workplaceBusinessItems" column="WORKPLACE_BUSINESS_ITEMS"  />
+		<result property="workplaceFaxNumber" column="WORKPLACE_FAX_NUMBER"  />
+		<result property="workplaceEstablishDate" column="WORKPLACE_ESTABLISH_DATE"  />
+		<result property="businessLicenseNumber" column="BUSINESS_LICENSE_NUMBER"  />
+		<result property="workplaceTelNumber" column="WORKPLACE_TEL_NUMBER"  />
+		<result property="workplaceName" column="WORKPLACE_NAME"  />
+		<result property="workplaceBasicAddress" column="WORKPLACE_BASIC_ADDRESS"  />
+		<result property="workplaceCloseDate" column="WORKPLACE_CLOSE_DATE"  />
+		<result property="workplaceCode" column="WORKPLACE_CODE"  />
+		<result property="companyCode" column="COMPANY_CODE"  />
+		<result property="workplaceOpenDate" column="WORKPLACE_OPEN_DATE"  />
+		<result property="corporationLicenseNumber" column="CORPORATION_LICENSE_NUMBER"  />
+		<result property="workplaceZipCode" column="WORKPLACE_ZIP_CODE"  /> 
+	</resultMap>
+		
+	<select id="selectWorkplaceList"  parameterType="String" resultMap="workplaceResult">
+		SELECT * FROM WORKPLACE WHERE COMPANY_CODE = #{companyCode}
+	</select>
+		
+	<insert id="insertWorkplace" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.WorkplaceTO">
+		Insert into WORKPLACE 
+			( WORKPLACE_CODE , COMPANY_CODE , WORKPLACE_NAME , BUSINESS_LICENSE_NUMBER , 
+			CORPORATION_LICENSE_NUMBER , WORKPLACE_CEO_NAME , WORKPLACE_BUSINESS_CONDITIONS , 
+			WORKPLACE_BUSINESS_ITEMS , WORKPLACE_ZIP_CODE , WORKPLACE_BASIC_ADDRESS , 
+			WORKPLACE_DETAIL_ADDRESS , WORKPLACE_TEL_NUMBER , WORKPLACE_FAX_NUMBER , 
+			WORKPLACE_ESTABLISH_DATE , WORKPLACE_OPEN_DATE , WORKPLACE_CLOSE_DATE , IS_MAIN_OFFICE) 
+			values ( #{workplaceCode} ,
+					 #{companyCode} ,
+					 #{workplaceName} , 
+		 			 #{businessLicenseNumber} , 
+					 #{corporationLicenseNumber} , 
+					 #{workplaceCeoName} , 
+					 #{workplaceBusinessConditions} , 
+					 #{workplaceBusinessItems} , 
+					 #{workplaceZipCode} , 
+					 #{workplaceBasicAddress} , 
+					 #{workplaceDetailAddress} , 
+					 #{workplaceTelNumber} , 
+					 #{workplaceFaxNumber} , 
+					 #{workplaceEstablishDate} , 
+					 #{workplaceOpenDate} , 
+					 #{workplaceCloseDate} , 
+					 #{isMainOffice} 
+					 )
+	</insert>
+	
+	<update id="updateWorkplace" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.WorkplaceTO">
+    	UPDATE WORKPLACE SET 
+			COMPANY_CODE = #{companyCode} , WORKPLACE_NAME = #{workplaceName} , 
+			BUSINESS_LICENSE_NUMBER = #{businessLicenseNumber} , CORPORATION_LICENSE_NUMBER = #{corporationLicenseNumber} , 
+			WORKPLACE_CEO_NAME = #{workplaceCeoName} , WORKPLACE_BUSINESS_CONDITIONS = #{workplaceBusinessConditions} ,
+			WORKPLACE_BUSINESS_ITEMS = #{workplaceBusinessItems} , WORKPLACE_ZIP_CODE = #{workplaceZipCode} , 
+			WORKPLACE_BASIC_ADDRESS = #{workplaceBasicAddress} , WORKPLACE_DETAIL_ADDRESS = #{workplaceDetailAddress} , 
+			WORKPLACE_TEL_NUMBER = #{workplaceTelNumber} , WORKPLACE_FAX_NUMBER = #{workplaceFaxNumber} ,
+			WORKPLACE_ESTABLISH_DATE = #{workplaceEstablishDate} , WORKPLACE_OPEN_DATE = #{workplaceOpenDate} , 
+			WORKPLACE_CLOSE_DATE = #{workplaceCloseDate} , IS_MAIN_OFFICE = #{isMainOffice} 
+			WHERE WORKPLACE_CODE = #{workplaceCode}
+	</update>
+	
+	<delete id="deleteWorkplace" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.WorkplaceTO">
+		DELETE FROM WORKPLACE WHERE WORKPLACE_CODE = #{workplaceCode}
+	</delete>
+
+	<resultMap id="estimateReportResult" type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.EstimateReportTO">
+	  <result property="estimateNo" column="ESTIMATE_NO"/>
+	  <result property="estimateDate" column="ESTIMATE_DATE"/>
+	  <result property="unitOfEstimate" column="UNIT_OF_ESTIMATE"/>
+	  <result property="estimateAmount" column="ESTIMATE_AMOUNT"/>
+	  <result property="unitPriceOfEstimate" column="UNIT_PRICE_OF_ESTIMATE"/>
+	  <result property="sumPriceOfEstimate" column="SUM_PRICE_OF_ESTIMATE"/>
+	  <result property="itemCode" column="ITEM_CODE"/>
+	  <result property="itemName" column="ITEM_NAME"/>
+	  <result property="customerName" column="CUSTOMER_NAME"/>
+	  <result property="customerTelNumber" column="CUSTOMER_TEL_NUMBER"/>
+	  <result property="customerFaxNumber" column="CUSTOMER_FAX_NUMBER"/>
+	  <result property="tax" column="TAX"/>
+	  <result property="totalAmount" column="TOTAL_AMOUNT"/>
+	  <result property="totalEstimatePrice" column="TOTAL_ESTIMATE_PRICE"/>
+	  <result property="totalEstimatePriceWithTax" column="TOTAL_ESTIMATE_PRICE_WITH_TAX"/>
+	 
+	</resultMap>
+	
+	<select id="selectEstimateReport"  parameterType="String" resultMap="estimateReportResult">
+	
+		SELECT E.ESTIMATE_NO, E.ESTIMATE_DATE, D.UNIT_OF_ESTIMATE,
+		D.ESTIMATE_AMOUNT,
+		D.UNIT_PRICE_OF_ESTIMATE, D.SUM_PRICE_OF_ESTIMATE, I.ITEM_CODE, I.ITEM_NAME,
+		C.CUSTOMER_NAME, C.CUSTOMER_TEL_NUMBER, C.CUSTOMER_FAX_NUMBER,
+		D.SUM_PRICE_OF_ESTIMATE * 0.1 AS TAX, ( D.UNIT_PRICE_OF_ESTIMATE *
+		D.ESTIMATE_AMOUNT ) + ( D.SUM_PRICE_OF_ESTIMATE * 0.1 ) AS TOTAL_AMOUNT , SUM
+		( ( D.UNIT_PRICE_OF_ESTIMATE * D.ESTIMATE_AMOUNT ) ) OVER ( PARTITION BY
+		E.ESTIMATE_NO ORDER BY E.ESTIMATE_NO ROWS BETWEEN UNBOUNDED PRECEDING
+		AND
+		UNBOUNDED FOLLOWING ) AS TOTAL_ESTIMATE_PRICE, SUM ( (
+		D.UNIT_PRICE_OF_ESTIMATE * D.ESTIMATE_AMOUNT ) + ( D.SUM_PRICE_OF_ESTIMATE *
+		0.1 ) ) OVER ( PARTITION BY E.ESTIMATE_NO ORDER BY E.ESTIMATE_NO ROWS
+		BETWEEN
+		UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING ) AS
+		TOTAL_ESTIMATE_PRICE_WITH_TAX FROM ESTIMATE E INNER JOIN ESTIMATE_DETAIL D ON
+		E.ESTIMATE_NO = D.ESTIMATE_NO INNER JOIN CUSTOMER C ON E.CUSTOMER_CODE =
+		C.CUSTOMER_CODE INNER JOIN ITEM I ON D.ITEM_CODE = I.ITEM_CODE WHERE
+		E.ESTIMATE_NO =#{estimateNo}
+			
+	</select>
+
+	<resultMap id="contractReportResult" type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.ContractReportTO">
+	  <result property="contractNo" column="CONTRACT_NO"/>
+	  <result property="contractDate" column="CONTRACT_DATE"/>
+	  <result property="itemCode" column="ITEM_CODE"/>
+	  <result property="itemName" column="ITEM_NAME"/>
+	  <result property="unitPriceOfContract" column="UNIT_PRICE_OF_CONTRACT"/>
+	  <result property="sumPriceOfContract" column="SUM_PRICE_OF_CONTRACT"/>
+	  <result property="unitOfContract" column="UNIT_OF_CONTRACT"/>
+	  <result property="contractAmount" column="ESTIMATE_AMOUNT"/>
+	  <result property="businessLicenseNumber" column="BUSINESS_LICENSE_NUMBER"/>
+	  <result property="customerName" column="CUSTOMER_NAME"/>
+	  <result property="customerCeo" column="CUSTOMER_CEO"/>
+	  <result property="customerBusinessConditions" column="CUSTOMER_BUSINESS_CONDITIONS"/>
+	  <result property="customerBusinessItems" column="CUSTOMER_BUSINESS_ITEMS"/>
+	  <result property="customerBasicAddress" column="CUSTOMER_BASIC_ADDRESS"/>
+	  <result property="tax" column="TAX"/>
+	  <result property="totalAmount" column="TOTAL_AMOUNT"/>
+	  <result property="sumPrice" column="SUM_PRICE"/>
+	  <result property="sumAmount" column="SUM_AMOUNT"/>
+	  <result property="sumTax" column="SUM_TAX"/>
+	  <result property="sumTotalAmount" column="SUM_TOTAL_AMOUNT"/>
+	  
+	</resultMap>
+	
+	<select id="selectContractReport" resultMap="contractReportResult" parameterType="string">
+		WITH CONTRACT_INFO AS
+		( SELECT
+		C.CONTRACT_NO, C.CONTRACT_DATE, D.ITEM_CODE, D.ITEM_NAME, 
+		D.UNIT_PRICE_OF_CONTRACT, D.SUM_PRICE_OF_CONTRACT, 
+		D.UNIT_OF_CONTRACT, D.ESTIMATE_AMOUNT, CU.BUSINESS_LICENSE_NUMBER, CU.CUSTOMER_NAME, CU.CUSTOMER_CEO, CU.CUSTOMER_BASIC_ADDRESS, 
+		CU.CUSTOMER_BUSINESS_CONDITIONS, CU.CUSTOMER_BUSINESS_ITEMS,
+		( D.SUM_PRICE_OF_CONTRACT * 0.1 ) AS TAX,
+		( ( D.UNIT_PRICE_OF_CONTRACT * D.ESTIMATE_AMOUNT) + ( D.SUM_PRICE_OF_CONTRACT * 0.1 ) ) AS TOTAL_AMOUNT
+		FROM
+		CONTRACT C INNER JOIN CONTRACT_DETAIL D ON C.CONTRACT_NO = D.CONTRACT_NO
+		INNER JOIN CUSTOMER CU ON C.CUSTOMER_CODE = CU.CUSTOMER_CODE
+		INNER JOIN ITEM I ON D.ITEM_CODE = I.ITEM_CODE
+		WHERE C.CONTRACT_NO = #{contractNo} ),
+		
+		CONTRACT_SUM AS
+		( SELECT SUM(SUM_PRICE_OF_CONTRACT) AS SUM_PRICE, SUM(ESTIMATE_AMOUNT) AS SUM_AMOUNT,
+		SUM(SUM_PRICE_OF_CONTRACT)*0.1 AS SUM_TAX,
+		(SUM(SUM_PRICE_OF_CONTRACT)*0.1)+SUM(SUM_PRICE_OF_CONTRACT) AS SUM_TOTAL_AMOUNT
+		FROM
+		CONTRACT_INFO )
+		
+		SELECT * FROM CONTRACT_INFO, CONTRACT_SUM
+	</select>
+	
+	<!-- board -->
+
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.BoardTO" id="boardResult">
+		<result property="board_seq" column="BOARD_SEQ" />
+		<result property="ref_seq" column="REF_SEQ" />
+		<result property="reply_seq" column="REPLY_SEQ" />
+		<result property="name" column="NAME" />
+		<result property="title" column="TITLE" />
+		<result property="content" column="CONTENT" />
+		<result property="hit" column="HIT" />
+		<result property="reg_date" column="REG_DATE" />
+	</resultMap>
+	
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.BoardTO" id="board">
+		<result property="board_seq" column="board_seq" />
+		<result property="ref_seq" column="ref_seq" />
+		<result property="reply_seq" column="reply_seq" />
+		<result property="name" column="name" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="hit" column="hit" />
+		<result property="reg_date" column="reg_date" />
+	</resultMap>
+	
+	<resultMap type="kr.co.seoulit.logistics.logiinfosvc.compinfo.util.BoardFile" id="fileResult">
+		<result property="file_seq" column="file_seq" />
+		<result property="fileName" column="filename" />
+		<result property="tempFileName" column="tempfilename" />
+	</resultMap>
+	
+
+	<select id="selectBoardList" resultMap="boardResult">
+		<![CDATA[                
+	   		SELECT board_seq,
+	   		       ref_seq,
+	   		       reply_seq,
+	   		       name,
+	   		       title,
+	   		       content,
+	   		       hit,
+	   		       reg_date
+	   		FROM newBoard START WITH reply_seq=0
+	   		CONNECT BY PRIOR board_seq=reply_seq
+	   		ORDER SIBLINGS BY ref_seq desc 
+   		]]>
+    </select>
+    
+    <select id="selectBoard" parameterType="integer" resultMap="board" >
+		<![CDATA[                
+   			SELECT * 
+   			FROM NEWBOARD
+   			WHERE board_seq = #{board_seq}
+   		]]>
+    </select>
+    
+    <select id="selectBoardFile" parameterType="integer" resultMap="fileResult" >
+		<![CDATA[                
+   			SELECT file_seq, filename, tempfilename 
+   			FROM BOARDFILE
+   			WHERE board_seq = #{board_seq}
+   		]]>
+    </select>
+    
+    
+    <update id="updateHit" parameterType="integer">
+		<![CDATA[                
+   			UPDATE NEWBOARD SET hit=hit+1 WHERE board_seq = #{board_seq}
+   		]]>
+    </update>
+    
+    <insert id="insertBoard" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.BoardTO">
+		<![CDATA[                
+   			INSERT INTO NEWBOARD VALUES (newBoard_seq.NEXTVAL, newBoard_seq.CURRVAL, #{reply_seq}, #{name}, #{title}, #{content}, 0, #{reg_date})
+   		]]>
+    </insert>
+    
+    <insert id="insertReplyBoard" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.to.BoardTO">
+		<![CDATA[                
+   			INSERT INTO NEWBOARD VALUES (newBoard_seq.NEXTVAL, #{ref_seq}, #{reply_seq}, #{name}, #{title}, #{content}, 0, #{reg_date})
+   		]]>
+    </insert>
+    
+    <insert id="insertBoardFile" parameterType="kr.co.seoulit.logistics.logiinfosvc.compinfo.util.BoardFile">
+		<![CDATA[                
+   			INSERT INTO BOARDFILE VALUES (boardFile_seq.NEXTVAL, newBoard_seq.CURRVAL, #{fileName}, #{tempFileName})
+   		]]>
+    </insert>
+    
+    <select id="selectRowCount" resultType="integer">
+		<![CDATA[                
+   			SELECT COUNT(*) FROM NEWBOARD
+   		]]>
+    </select>
+
+
+	<delete id="deleteBoard" parameterType="integer">
+		<![CDATA[         
+   			DELETE FROM NEWBOARD WHERE BOARD_SEQ = #{BOARD_SEQ}
+   		]]>
+    </delete>
+    
+    <select id="selectBoardPageList" resultMap="boardResult" parameterType="map">
+		<![CDATA[                
+			SELECT *
+			FROM 
+			(SELECT ROWNUM AS RN, BOARD_SEQ, REF_SEQ, REPLY_SEQ, LEVEL, NAME, TITLE, CONTENT, HIT, REG_DATE 
+			 FROM  (SELECT * FROM NEWBOARD)
+		     START WITH REPLY_SEQ=0 
+		     CONNECT BY PRIOR BOARD_SEQ=REPLY_SEQ 
+		     ORDER SIBLINGS BY REF_SEQ DESC)A
+			 WHERE A.RN BETWEEN #{start} AND #{end}
+   		]]>
+   	</select>
+    	
+</mapper>

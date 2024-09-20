@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.seoulit.logistics.logiinfosvc.logiinfo.mapper.WarehouseMapper">
+
+    <resultMap type="kr.co.seoulit.logistics.logiinfosvc.logiinfo.to.WarehouseTO" id="warehouseResult">     		
+		<result property="warehouseCode" column="WAREHOUSE_CODE" />
+		<result property="warehouseName" column="WAREHOUSE_NAME" />
+		<result property="warehouseUseOrNot" column="WAREHOUSE_USE_OR_NOT" />
+		<result property="description" column="DESCRIPTION" />			
+	</resultMap>
+	
+	<select id="selectWarehouseList" resultMap="warehouseResult">
+		SELECT * FROM WAREHOUSE
+	</select>
+	
+	<insert id="insertWarehouse" parameterType="kr.co.seoulit.logistics.logiinfosvc.logiinfo.to.WarehouseTO">
+		INSERT INTO WAREHOUSE (
+			WAREHOUSE_CODE,
+			WAREHOUSE_NAME,
+			WAREHOUSE_USE_OR_NOT,
+			DESCRIPTION
+		)
+		VALUES (
+			#{warehouseCode},
+			#{warehouseName},
+			#{warehouseUseOrNot},
+			#{description}
+		)
+	</insert>
+	
+	<delete id="deleteWarehouse" parameterType="kr.co.seoulit.logistics.logiinfosvc.logiinfo.to.WarehouseTO">
+		DELETE FROM WAREHOUSE WHERE WAREHOUSE_CODE = #{warehouseCode}
+	</delete>
+	
+	<update id="updateWarehouse" parameterType="kr.co.seoulit.logistics.logiinfosvc.logiinfo.to.WarehouseTO">
+		UPDATE WAREHOUSE SET
+			WAREHOUSE_NAME = #{warehouseName},
+			WAREHOUSE_USE_OR_NOT = #{warehouseUseOrNot},
+			DESCRIPTION = #{description}
+		WHERE WAREHOUSE_CODE = #{warehouseCode}
+	</update>
+</mapper>
