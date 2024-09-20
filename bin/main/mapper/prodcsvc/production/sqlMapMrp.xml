@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.seoulit.logistics.prodcsvc.production.mapper.MrpMapper">
+	
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpTO" id="mrpResult">
+		<result property="mrpNo" column="MRP_NO"  />
+		<result property="mpsNo" column="MPS_NO"  />
+		<result property="mrpGatheringNo" column="MRP_GATHERING_NO"  />
+		<result property="itemClassification" column="ITEM_CLASSIFICATION"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfMrp" column="UNIT_OF_MRP"  />
+		<result property="requiredAmount" column="REQUIRED_AMOUNT" />
+		<result property="orderDate" column="ORDER_DATE"  />
+		<result property="requiredDate" column="REQUIRED_DATE"  />
+		<result property="mrpGatheringStatus" column="MRP_GATHERING_STATUS"  />
+	</resultMap>
+
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.OpenMrpTO" id="openMrpResult">			
+		<result property="mpsNo" column="MPS_NO"  />
+		<result property="bomNo" column="BOM_NO"  />
+		<result property="itemClassification" column="ITEM_CLASSIFICATION"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="orderDate" column="ORDER_DATE"  />
+		<result property="requiredDate" column="REQUIRED_DATE"  />
+		<result property="planAmount" column="PLAN_AMOUNT"  />
+		<result property="totalLossRate" column="TOTAL_LOSS_RATE"  />
+		<result property="caculatedAmount" column="CACULATED_AMOUNT"  />
+		<result property="requiredAmount" column="REQUIRED_AMOUNT" />
+		<result property="unitOfMrp" column="UNIT_OF_MRP"  />			
+	</resultMap>
+	
+	<select id="selectMrpList" parameterType="map" resultMap="mrpResult">
+		SELECT * FROM MRP 
+		WHERE 1=1
+		<if test='mrpGatheringStatusCondition=="null" or mrpGatheringStatusCondition==""'>
+			AND	MRP_GATHERING_STATUS IS NULL
+		</if>
+		<if test='mrpGatheringStatusCondition=="notNull"'>
+			AND	MRP_GATHERING_STATUS IS NOT NULL
+		</if> 
+		ORDER BY MRP_NO
+	</select>
+	
+	<select id="selectMrpListAsDate" parameterType="map" resultMap="mrpResult">
+		SELECT * FROM MRP WHERE ( CASE #{dateSearchCondition} WHEN 'orderDate' THEN 
+              TO_DATE(ORDER_DATE, 'YYYY-MM-DD') WHEN 'requiredDate' THEN
+              TO_DATE(REQUIRED_DATE, 'YYYY-MM-DD') END )  
+              BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+	</select>
+	
+	<select id="selectMrpListAsMrpGatheringNo" parameterType="String" resultMap="mrpResult">
+		SELECT * FROM MRP WHERE MRP_GATHERING_NO = #{mrpGatheringNo}
+	</select>
+	
+	<parameterMap type="map" id="openMrpParameter">
+		<parameter property="mpsNoList" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+		<parameter property="RESULT" javaType="java.sql.ResultSet" jdbcType="CURSOR" mode="OUT" resultMap="openMrpResult"/>
+	</parameterMap>
+	
+	<select id="openMrp" parameterMap="openMrpParameter" statementType="CALLABLE">
+		<![CDATA[ {call P_MRP_OPEN(?,?,?,?)} ]]>
+	</select>
+	
+	<resultMap id="mrpNoResult" type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpTO">
+		<result property="mrpNo" column="MRP_NO" />
+	</resultMap>
+	
+	<select id="selectMrpCount" parameterType="String" resultMap="mrpNoResult">
+		<![CDATA[
+			SELECT * FROM MRP WHERE INSTR(MRP_NO, REPLACE( #{mrpRegisterDate} , '-' , '' ) ) > 0
+		]]>
+	</select>
+	
+	<insert id="insertMrp" parameterType="kr.co.seoulit.logistics.prodcsvc.production.to.MrpTO">
+		Insert into MRP
+              	(MRP_NO, MPS_NO, MRP_GATHERING_NO, ITEM_CLASSIFICATION, 
+              	ITEM_CODE, ITEM_NAME, UNIT_OF_MRP, 
+              	REQUIRED_AMOUNT, ORDER_DATE, REQUIRED_DATE,
+              	MRP_GATHERING_STATUS)
+              	values( #{mrpNo}, #{mpsNo}, 
+              			#{mrpGatheringNo}, #{itemClassification},
+              			#{itemCode}, #{itemName},
+              			#{unitOfMrp}, #{requiredAmount},
+              			#{orderDate} , #{requiredDate}, #{mrpGatheringStatus}
+              		  )               	
+	</insert>
+	
+	<update id="updateMrp" parameterType="kr.co.seoulit.logistics.prodcsvc.production.to.MrpTO">
+		UPDATE MRP SET MPS_NO = #{mpsNo} , MRP_GATHERING_NO = #{mrpGatheringNo} ,
+              ITEM_CLASSIFICATION = #{itemClassification} , ITEM_CODE = #{itemCode} ,
+              ITEM_NAME = #{itemName} , UNIT_OR_MRP = #{unitOfMrp} ,
+              REQUIRED_AMOUNT = #{requiredAmount} , ORDER_DATE = #{orderDate} ,
+              REQUIRED_DATE = #{requiredDate} , MRP_GATHERING_STATUS = #{mrpGatheringStatus} 
+              WHERE MRP_NO = #{mrpNo}
+	</update>
+	
+	<update id="changeMrpGatheringStatus" parameterType="map">
+		UPDATE MRP SET 
+			MRP_GATHERING_NO = #{mrpGatheringNo} , 
+			MRP_GATHERING_STATUS = #{mrpGatheringStatus} 
+			WHERE MRP_NO = #{mrpNo}
+	</update>
+	
+	<delete id="deleteMrp" parameterType="kr.co.seoulit.logistics.prodcsvc.production.to.MrpTO">
+		DELETE FROM MRP WHERE MRP_NO = #{mrpNo}
+	</delete>
+	
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpInsertInfoTO" id="noList">
+		<result property="firstMrpNo" column="FIRST_NO"  />
+		<result property="lastMrpNo" column="LAST_NO"  />
+		<result property="length" column="LENG"  />
+	</resultMap>
+	
+	<parameterMap type="map" id="insertMrpParamMap">
+		<parameter property="mrpRegisterDate" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+		<parameter property="RESULT" javaType="java.sql.ResultSet" jdbcType="CURSOR" mode="OUT" resultMap="noList" />
+	</parameterMap>
+
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpInsertInfoTO" id="resultMrpInsertMap">
+		<result property="firstMrpNo" column="FIRST_NO"  />
+		<result property="lastMrpNo" column="LAST_NO"  />
+		<result property="length" column="LENG"  />
+	</resultMap>
+	
+	<insert id="insertMrpList" parameterMap="insertMrpParamMap" statementType="CALLABLE">
+		<![CDATA[ {call P_INSERT_MRP(?,?,?,?)} ]]>
+	</insert>
+
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpGatheringTO" id="mrpGatheringListResult">
+		<result property="mrpGatheringNo" column="MRP_GATHERING_NO"  />
+		<result property="orderOrProductionStatus" column="ORDER_OR_PRODUCTION_STATUS"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfMrpGathering" column="UNIT_OF_MRP_GATHERING"  />
+		<result property="claimDate" column="CLAIM_DATE"  />
+		<result property="dueDate" column="DUE_DATE"  />
+		<result property="necessaryAmount" column="NECESSARY_AMOUNT" />
+	</resultMap>
+	
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpGatheringTO" id="mrpGatheringResult" >
+		<result property="orderOrProductionStatus" column="ORDER_OR_PRODUCTION_STATUS"  />
+		<result property="itemCode" column="ITEM_CODE"  />
+		<result property="itemName" column="ITEM_NAME"  />
+		<result property="unitOfMrpGathering" column="UNIT_OF_MRP_GATHERING"  />
+		<result property="claimDate" column="CLAIM_DATE"  />
+		<result property="dueDate" column="DUE_DATE"  />
+		<result property="necessaryAmount" column="NECESSARY_AMOUNT"  />
+	</resultMap>
+	
+	<select id="selectMrpGatheringList" parameterType="map" resultMap="mrpGatheringListResult">
+		SELECT * FROM MRP_GATHERING WHERE ( CASE #{searchDateCondition} WHEN 'claimDate' THEN
+				TO_DATE(CLAIM_DATE, 'YYYY-MM-DD') WHEN 'dueDate' THEN
+				TO_DATE(DUE_DATE, 'YYYY-MM-DD') END )
+				BETWEEN TO_DATE(#{startDate},'YYYY-MM-DD') AND TO_DATE(#{endDate},'YYYY-MM-DD')
+	</select>
+	
+	<select id="getMrpGathering" parameterType="String" resultMap="mrpGatheringResult">
+		<![CDATA[
+		SELECT ORDER_OR_PRODUCTION_STATUS
+				,ITEM_CODE
+				,ITEM_NAME
+				,UNIT_OF_MRP_GATHERING		
+				,CLAIM_DATE
+				,DUE_DATE
+				,SUM(NECESSARY_AMOUNT) AS NECESSARY_AMOUNT
+		FROM  (SELECT DECODE(item_classification,'원재료','구매','생산') AS ORDER_OR_PRODUCTION_STATUS 
+					,ITEM_CODE 
+					,TRIM(ITEM_NAME) AS ITEM_NAME 
+					,UNIT_OF_MRP AS UNIT_OF_MRP_GATHERING
+					,MIN(ORDER_DATE)      AS CLAIM_DATE 
+					,MIN(REQUIRED_DATE)   AS DUE_DATE 
+					,SUM(REQUIRED_AMOUNT) AS NECESSARY_AMOUNT
+					FROM   mrp
+					WHERE  mrp_gathering_no IS NULL
+					AND    MRP_NO IN ( WITH MRP_NO_STR AS
+					                    (SELECT #{mrpNoList} AS STR
+					                    FROM    DUAL)
+								            SELECT   TRIM(REGEXP_SUBSTR(MRP_NO_STR.STR,'[^,]+',1,LEVEL)) AS MRP_NO
+								            FROM     MRP_NO_STR
+								            CONNECT BY LEVEL <= REGEXP_COUNT(STR,'[^,]+',1) )
+		  GROUP BY ITEM_CLASSIFICATION 
+		  				,ITEM_CODE 
+		  				,ITEM_NAME 
+		  				,UNIT_OF_MRP
+		  ORDER BY CLAIM_DATE 
+		  				,ORDER_OR_PRODUCTION_STATUS)
+		  GROUP BY ITEM_CODE,ITEM_NAME,ORDER_OR_PRODUCTION_STATUS,UNIT_OF_MRP_GATHERING,CLAIM_DATE,DUE_DATE
+		  ORDER BY CLAIM_DATE
+		]]>
+	</select>
+	
+	<resultMap type="kr.co.seoulit.logistics.prodcsvc.production.to.MrpGatheringTO" id="mrpGatheringNoResult">
+		<result property="mrpGatheringNo" column="MRP_GATHERING_NO"  />		
+	</resultMap>
+	
+	<select id="selectMrpGatheringCount" parameterType="String" resultMap="mrpGatheringNoResult">
+		SELECT * FROM MRP_GATHERING WHERE INSTR(MRP_GATHERING_NO, REPLACE( #{mrpGatheringRegisterDate} , '-' , '' ) ) > 0
+	</select>
+	
+	<insert id="insertMrpGathering" parameterType="kr.co.seoulit.logistics.prodcsvc.production.to.MrpGatheringTO">
+		Insert into MRP_GATHERING 
+			( MRP_GATHERING_NO, ORDER_OR_PRODUCTION_STATUS, ITEM_CODE, ITEM_NAME,
+			UNIT_OF_MRP_GATHERING, CLAIM_DATE, DUE_DATE, NECESSARY_AMOUNT, MRP_GATHERING_SEQ ) 				
+			values ( #{mrpGatheringNo}, #{orderOrProductionStatus}, 
+					 #{itemCode}, #{itemName}, #{unitOfMrpGathering},
+					 #{claimDate}, #{dueDate}, #{necessaryAmount} ,#{mrpGatheringSeq}
+					) 				 	
+	</insert>
+	
+	<update id="updateMrpGathering" parameterType="kr.co.seoulit.logistics.prodcsvc.production.to.MrpGatheringTO">
+		UPDATE MRP_GATHERING SET 
+				ITEM_CODE = #{itemCode} , ITEM_NAME = #{itemName} , UNIT_OF_MRP_GATHERING = #{unitOfMrpGathering} , 
+				NECESSARY_AMOUNT = #{necessaryAmount} , DUE_DATE = #{dueDate} , CLAIM_DATE = #{claimDate}, 
+				ORDER_OR_PRODUCTION_STATUS = #{orderOrProductionStatus} 
+				WHERE MRP_GATHERING_NO = #{mrpGatheringNo}
+	</update>
+	
+	<delete id="deleteMrpGathering" parameterType="kr.co.seoulit.logistics.prodcsvc.production.to.MrpGatheringTO">
+		DELETE FROM MRP_GATHERING WHERE MRP_GATHERING_NO = #{mrpGatheringNo}
+	</delete>
+	
+	<parameterMap type="map" id="updateMrpGatheringContractParameter">
+		<parameter property="mrpGatheringNo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="ERROR_CODE" javaType="java.lang.Integer" jdbcType="DECIMAL" mode="OUT" />
+		<parameter property="ERROR_MSG" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+	</parameterMap>
+	
+	<update id="updateMrpGatheringContract" parameterMap="updateMrpGatheringContractParameter"  statementType="CALLABLE">
+		<![CDATA[
+			{call P_MRP_GATHERING_CONTRACT(?,?,?)}
+		]]>
+	</update>
+	
+	<select id="getMGSeqNo" resultType="int">
+			SELECT MRP_GATHERING_SEQ.NEXTVAL FROM DUAL
+	</select>
+	
+</mapper>
