@@ -5,19 +5,17 @@ pipeline {
         stage('Check PATH') {
             steps {
                 script {
-                    sh 'echo $PATH'  // Linux/Mac
+                    bat 'echo %PATH%'  // Windows에서 PATH 확인
                 }
             }
         }
-    }
 
-    stages {
         // Terraform을 사용해 클러스터 자원 관리
         stage('Terraform Apply') {
             steps {
                 dir('E:/docker_dev/terraform-codes') {
                     script {
-                        sh '''
+                        bat '''
                         terraform apply -auto-approve
                         '''
                     }
@@ -29,7 +27,7 @@ pipeline {
         stage('Apply Backend Service') {
             steps {
                 script {
-                    sh 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
+                    bat 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
                 }
             }
         }
@@ -39,10 +37,10 @@ pipeline {
             steps {
                 script {
                     // 프론트엔드 서비스의 URL 가져오기
-                    def frontend_service_url = sh(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
-                    
+                    def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
+
                     // application.properties에 프론트엔드 서비스 URL 업데이트
-                    sh """
+                    bat """
                     sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
                     """
                 }
@@ -54,7 +52,7 @@ pipeline {
             steps {
                 dir('E:/docker_dev/logi_react_back_cloud') {
                     script {
-                        sh """
+                        bat """
                         docker build -t 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest .
                         docker push 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest
                         """
@@ -67,7 +65,7 @@ pipeline {
         stage('Apply Backend Deployment') {
             steps {
                 script {
-                    sh 'kubectl apply -f E:/docker_Logi/logi-back-deployment.yaml'
+                    bat 'kubectl apply -f E:/docker_Logi/logi-back-deployment.yaml'
                 }
             }
         }
