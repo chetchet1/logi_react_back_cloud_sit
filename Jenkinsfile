@@ -72,7 +72,7 @@ pipeline {
                         // 3. PowerShell 스크립트로 application.properties 파일 업데이트
                         bat """
                         powershell -Command \"
-                        \$frontendUrl = 'http://$frontend_service_url:3000';
+                        \$frontendUrl = 'http://${frontend_service_url}:3000';
                         (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=\$frontendUrl' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties';
                         \"
                         """
