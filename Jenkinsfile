@@ -37,7 +37,7 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                         bat '''
-                        aws eks update-kubeconfig --region %REGION% --name your-cluster-name
+                        aws eks update-kubeconfig --region %REGION% --name test-eks-cluster
                         '''
                     }
                 }
