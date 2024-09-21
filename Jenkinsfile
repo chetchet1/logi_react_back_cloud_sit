@@ -59,10 +59,12 @@ pipeline {
         stage('Get Frontend Service URL') {
             steps {
                 script {
-                    def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
-                    bat """
-                    sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
-                    """
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
+                        bat """
+                        sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
+                        """
+                    }
                 }
             }
         }
@@ -72,10 +74,12 @@ pipeline {
             steps {
                 dir('E:/docker_dev/logi_react_back_cloud') {
                     script {
-                        bat """
-                        docker build -t 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest .
-                        docker push 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest
-                        """
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                            bat """
+                            docker build -t 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest .
+                            docker push 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest
+                            """
+                        }
                     }
                 }
             }
@@ -85,7 +89,9 @@ pipeline {
         stage('Apply Backend Deployment') {
             steps {
                 script {
-                    bat 'kubectl apply -f E:/docker_Logi/logi-back-deployment.yaml'
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        bat 'kubectl apply -f E:/docker_Logi/logi-back-deployment.yaml'
+                    }
                 }
             }
         }
