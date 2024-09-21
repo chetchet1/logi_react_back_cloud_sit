@@ -37,7 +37,7 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                         bat '''
-                        aws eks update-kubeconfig --region ${REGION} --name test-eks-cluster
+                        aws eks update-kubeconfig --region %REGION% --name test-eks-cluster
                         '''
                     }
                 }
@@ -63,7 +63,7 @@ pipeline {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                         def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
                         bat """
-                        powershell -Command "(Get-Content E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties) -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000' | Set-Content E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties"
+                        sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
                         """
                     }
                 }
