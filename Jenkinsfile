@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         REGION = 'ap-northeast-2'
+        AWS_CREDENTIAL_NAME = 'aws-key'
     }
 
     stages {
@@ -19,37 +20,20 @@ pipeline {
             steps {
                 dir('E:/docker_dev/terraform-codes') {
                     script {
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                            bat '''
-                            set AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID%
-                            set AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY%
-                            terraform apply -auto-approve
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
-        // AWS EKS 클러스터에 로그인
-        stage('Update Kubeconfig') {
-            steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                         bat '''
-                        aws eks update-kubeconfig --region %REGION% --name test-eks-cluster
+                        terraform apply -auto-approve
                         '''
                     }
                 }
             }
         }
 
-        // 백엔드 서비스만 적용
-        stage('Apply Backend Service') {
+        // 프론트엔드 서비스 배포
+        stage('Apply Frontend Service') {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                        bat 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
+                        bat 'kubectl apply -f E:/docker_Logi/logi-front-service.yaml'
                     }
                 }
             }
@@ -61,9 +45,22 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                         def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
+
+                        // application.properties에 프론트엔드 서비스 URL 업데이트
                         bat """
                         sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
                         """
+                    }
+                }
+            }
+        }
+
+        // 백엔드 서비스만 적용
+        stage('Apply Backend Service') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        bat 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
                     }
                 }
             }
