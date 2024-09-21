@@ -59,14 +59,15 @@ pipeline {
         stage('Update Backend Properties with Frontend URL') {
             steps {
                 script {
-                    // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
-                    def frontend_service_url = bat(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
+                        def frontend_service_url = bat(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
 
-                    // 2. PowerShell 명령어로 application.properties 파일 업데이트
-                    // 경로에 큰따옴표를 사용하고, PowerShell의 따옴표 처리를 올바르게 적용
-                    bat """
-                    powershell -Command "(Get-Content 'E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000' | Set-Content 'E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties'"
-                    """
+                        // 2. PowerShell을 사용하여 application.properties 파일 수정
+                        bat """
+                        powershell -Command "(Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties'"
+                        """
+                    }
                 }
             }
         }
