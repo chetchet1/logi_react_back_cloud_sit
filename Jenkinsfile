@@ -61,7 +61,10 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        // 프론트엔드 서비스 URL 가져오기
                         def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
+
+                        // .properties 파일의 URL 업데이트
                         bat """
                         powershell -Command "(Get-Content E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties) -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000' | Set-Content E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties"
                         """
@@ -69,6 +72,7 @@ pipeline {
                 }
             }
         }
+
 
         // 백엔드 Docker 이미지 빌드 및 ECR 푸시
         stage('Build and Push Backend Docker Image') {
