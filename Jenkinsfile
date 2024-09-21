@@ -82,9 +82,13 @@ pipeline {
 
         stage('Dockerizing Project by Dockerfile') {
             steps {
-                sh "C:/Program\\ Files/Git/bin/bash.exe -c 'docker build -t $IMAGE_NAME:latest . && docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest'"
+                script {
+                    bat "docker build -t ${IMAGE_NAME}:latest ."
+                    bat "docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:latest"
+                }
             }
         }
+
         stage('Upload to AWS ECR') {
             steps {
                 script {
