@@ -33,7 +33,7 @@ pipeline {
                     
                     // application.properties에 프론트엔드 서비스 URL 업데이트
                     sh """
-                    sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_Logi/application.properties
+                    sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
                     """
                 }
             }
@@ -42,7 +42,7 @@ pipeline {
         // 백엔드 Docker 이미지 빌드 및 ECR 푸시
         stage('Build and Push Backend Docker Image') {
             steps {
-                dir('E:/docker_dev/logi_react_front_cloud') {
+                dir('E:/docker_dev/logi_react_back_cloud') {
                     script {
                         sh """
                         docker build -t 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest .
