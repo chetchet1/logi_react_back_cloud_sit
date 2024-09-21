@@ -63,6 +63,9 @@ pipeline {
                         // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
                         def frontend_service_url = bat(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
 
+                        // 디버깅 출력문 추가
+                        echo "Frontend Service URL: ${frontend_service_url}"
+
                         // 2. PowerShell 스크립트로 application.properties 파일 업데이트
                         bat """
                         powershell -Command \"
