@@ -2,6 +2,16 @@ pipeline {
     agent any
 
     stages {
+        stage('Check PATH') {
+            steps {
+                script {
+                    sh 'echo $PATH'  // Linux/Mac
+                }
+            }
+        }
+    }
+
+    stages {
         // Terraform을 사용해 클러스터 자원 관리
         stage('Terraform Apply') {
             steps {
