@@ -63,13 +63,13 @@ pipeline {
                         // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
                         def frontend_service_url = bat(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
 
-                        // 2. PowerShell을 사용하여 application.properties 파일 수정 (변수를 사용하여 파일 수정)
-                        def powershellScript = """
-                        \$frontendUrl = 'http://${frontend_service_url}:3000'
-                        (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', "FRONTEND_SERVICE_URL=\$frontendUrl" | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties'
+                        // 2. PowerShell 스크립트로 application.properties 파일 업데이트
+                        bat """
+                        powershell -Command \"
+                        \$frontendUrl = 'http://${frontend_service_url}:3000';
+                        (Get-Content 'E:\\\\docker_dev\\\\logi_react_back_cloud\\\\src\\\\main\\\\resources\\\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', \\\"FRONTEND_SERVICE_URL=\$frontendUrl\\\" | Set-Content 'E:\\\\docker_dev\\\\logi_react_back_cloud\\\\src\\\\main\\\\resources\\\\application.properties';
+                        \"
                         """
-
-                        bat "powershell -Command \"${powershellScript}\""
                     }
                 }
             }
