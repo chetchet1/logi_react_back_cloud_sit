@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        REGION = 'ap-northeast-2'
+    }
+
     stages {
         stage('Check PATH') {
             steps {
@@ -15,9 +19,13 @@ pipeline {
             steps {
                 dir('E:/docker_dev/terraform-codes') {
                     script {
-                        bat '''
-                        terraform apply -auto-approve
-                        '''
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                            bat '''
+                            set AWS_ACCESS_KEY_ID=%AWS_ACCESS_KEY_ID%
+                            set AWS_SECRET_ACCESS_KEY=%AWS_SECRET_ACCESS_KEY%
+                            terraform apply -auto-approve
+                            '''
+                        }
                     }
                 }
             }
