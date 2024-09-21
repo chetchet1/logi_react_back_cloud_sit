@@ -60,8 +60,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                        // 1. PowerShell을 사용하여 프론트엔드 서비스의 호스트 이름을 가져옴
-                        def frontend_service_url = bat(script: 'powershell -Command "Invoke-Expression kubectl get service frontend-service -o jsonpath=\'{.status.loadBalancer.ingress[0].hostname}\'"', returnStdout: true).trim()
+                        // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
+                        def frontend_service_url = bat(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
 
                         // 2. 출력 확인
                         echo "Frontend Service URL: ${frontend_service_url}"
