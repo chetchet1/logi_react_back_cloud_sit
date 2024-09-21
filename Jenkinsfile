@@ -60,6 +60,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        // PowerShell 인코딩 설정
+                        bat 'powershell -Command "[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8"'
+
                         // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
                         def frontend_service_url = bat(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
 
@@ -69,7 +72,7 @@ pipeline {
                         // 3. PowerShell 스크립트로 application.properties 파일 업데이트
                         bat """
                         powershell -Command \"
-                        \$frontendUrl = 'http://${frontend_service_url}:3000';
+                        \$frontendUrl = 'http://$frontend_service_url:3000';
                         (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=\$frontendUrl' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties';
                         \"
                         """
