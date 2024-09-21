@@ -37,7 +37,7 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                         bat '''
-                        aws eks update-kubeconfig --region %REGION% --name test-eks-cluster
+                        aws eks update-kubeconfig --region %REGION% --name your-cluster-name
                         '''
                     }
                 }
@@ -48,7 +48,9 @@ pipeline {
         stage('Apply Backend Service') {
             steps {
                 script {
-                    bat 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        bat 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
+                    }
                 }
             }
         }
