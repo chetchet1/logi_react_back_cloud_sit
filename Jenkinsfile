@@ -9,6 +9,12 @@ pipeline {
     }
 
     stages {
+        stage('Pull Codes from Github') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Check PATH') {
             steps {
                 script {
@@ -76,6 +82,14 @@ pipeline {
                         powershell -Command "\$frontendUrl = 'http://a1877c4d5c687455db1b12e275f22b1f-316042409.ap-northeast-2.elb.amazonaws.com:3000'; (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=\$frontendUrl' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties';"
                         """
                     }
+                }
+            }
+        }
+
+        stage('Build Codes by Gradle') {
+            steps {
+                script {
+                    bat "./gradlew clean build"
                 }
             }
         }
