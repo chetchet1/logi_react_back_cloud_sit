@@ -31,6 +31,19 @@ pipeline {
             }
         }
 
+        // AWS EKS 클러스터에 로그인
+        stage('Update Kubeconfig') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
+                        bat '''
+                        aws eks update-kubeconfig --region %REGION% --name your-cluster-name
+                        '''
+                    }
+                }
+            }
+        }
+
         // 백엔드 서비스만 적용
         stage('Apply Backend Service') {
             steps {
@@ -44,10 +57,7 @@ pipeline {
         stage('Get Frontend Service URL') {
             steps {
                 script {
-                    // 프론트엔드 서비스의 URL 가져오기
                     def frontend_service_url = bat(script: "kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
-
-                    // application.properties에 프론트엔드 서비스 URL 업데이트
                     bat """
                     sed -i 's|^FRONTEND_SERVICE_URL=.*|FRONTEND_SERVICE_URL=http://${frontend_service_url}:3000|' E:/docker_dev/logi_react_back_cloud/src/main/resources/application.properties
                     """
