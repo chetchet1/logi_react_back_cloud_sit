@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         REGION = 'ap-northeast-2'
+        IMAGE_NAME = '339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back'
+        ECR_PATH = '339713037008.dkr.ecr.ap-northeast-2.amazonaws.com'
+        AWS_CREDENTIAL_NAME = 'aws-key'
     }
 
     stages {
@@ -60,8 +63,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                        // PowerShell 인코딩 설정
-                        bat 'powershell -Command "[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8"'
+
 
                         // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
                         def frontend_service_url = powershell(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
@@ -78,17 +80,16 @@ pipeline {
             }
         }
 
-        // 백엔드 Docker 이미지 빌드 및 ECR 푸시
-        stage('Build and Push Backend Docker Image') {
+        stage('Dockerizing Project by Dockerfile') {
             steps {
-                dir('E:/docker_dev/logi_react_back_cloud') {
-                    script {
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                            bat """
-                            docker build -t 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest .
-                            docker push 339713037008.dkr.ecr.ap-northeast-2.amazonaws.com/logi_back:latest
-                            """
-                        }
+                sh "C:/Program\\ Files/Git/bin/bash.exe -c 'docker build -t $IMAGE_NAME:latest . && docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest'"
+            }
+        }
+        stage('Upload to AWS ECR') {
+            steps {
+                script {
+                    docker.withRegistry("https://$ECR_PATH", "ecr:$REGION:$AWS_CREDENTIAL_NAME") {
+                        docker.image("$IMAGE_NAME:latest").push()
                     }
                 }
             }
