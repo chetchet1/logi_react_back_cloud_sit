@@ -21,7 +21,7 @@ import kr.co.seoulit.logistics.prodcsvc.production.service.ProductionService;
 import kr.co.seoulit.logistics.prodcsvc.production.to.MpsTO;
 import kr.co.seoulit.logistics.prodcsvc.production.to.SalesPlanInMpsAvailableTO;
 
-@CrossOrigin("${FRONTEND_SERVICE_URL}")
+@CrossOrigin("${FRONTEND_SERVICE_URL}:3000")
 @RestController
 @RequestMapping("/production/*")
 @Tag(name="MPS")

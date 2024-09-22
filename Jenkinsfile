@@ -70,7 +70,6 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
 
-
                         // 1. kubectl 명령어로 프론트엔드 서비스의 호스트 이름을 가져옴
                         def frontend_service_url = powershell(script: 'kubectl get service frontend-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"', returnStdout: true).trim()
 
@@ -79,7 +78,7 @@ pipeline {
 
                         // 3. PowerShell 스크립트로 application.properties 파일 업데이트
                         bat """
-                        powershell -Command "\$frontendUrl = 'http://a1877c4d5c687455db1b12e275f22b1f-316042409.ap-northeast-2.elb.amazonaws.com:3000'; (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=\$frontendUrl' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties';"
+                        powershell -Command "\$frontendUrl = '${frontend_service_url}'; (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://\$frontendUrl' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties';"
                         """
                     }
                 }
