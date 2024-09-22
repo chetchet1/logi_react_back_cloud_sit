@@ -18,7 +18,7 @@ import com.google.gson.reflect.TypeToken;
 
 import kr.co.seoulit.logistics.logiinfosvc.compinfo.service.CompInfoService;
 import kr.co.seoulit.logistics.logiinfosvc.compinfo.to.CustomerTO;
-//@CrossOrigin("${FRONTEND_SERVICE_URL}:3000")
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/compinfo/*")
 public class CustomerController {
