@@ -26,7 +26,7 @@ pipeline {
         // Terraform을 사용해 클러스터 자원 관리
         stage('Terraform Apply') {
             steps {
-                dir('E:/docker_dev/terraform-codes') {
+                dir('d:/docker_Logi/terraform-codes') {
                     script {
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
                             bat '''
@@ -58,8 +58,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                        bat 'kubectl apply -f E:/docker_Logi/logi-front-service.yaml'
-                        bat 'kubectl apply -f E:/docker_Logi/logi-back-service.yaml'
+                        bat 'kubectl apply -f d:/docker_Logi/logi-front-service.yaml'
+                        bat 'kubectl apply -f d:/docker_Logi/logi-back-service.yaml'
                     }
                 }
             }
@@ -78,7 +78,7 @@ pipeline {
 
                         // 3. PowerShell 스크립트로 application.properties 파일 업데이트
                         bat """
-                        powershell -Command "\$frontendUrl = '${frontend_service_url}'; (Get-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://\$frontendUrl' | Set-Content 'E:\\docker_dev\\logi_react_back_cloud\\src\\main\\resources\\application.properties';"
+                        powershell -Command "\$frontendUrl = '${frontend_service_url}'; (Get-Content 'd:\\docker_Logi\\logi_react_back_cloud\\src\\main\\resources\\application.properties') -replace 'FRONTEND_SERVICE_URL=.*', 'FRONTEND_SERVICE_URL=http://\$frontendUrl' | Set-Content 'd:\\docker_Logi\\logi_react_back_cloud\\src\\main\\resources\\application.properties';"
                         """
                     }
                 }
@@ -117,7 +117,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-key']]) {
-                        bat 'kubectl apply -f E:/docker_Logi/logi-back-deployment.yaml'
+                        bat 'kubectl apply -f d:/docker_Logi/logi-back-deployment.yaml'
                     }
                 }
             }
